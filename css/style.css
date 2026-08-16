@@ -1,0 +1,200 @@
+:root {
+  --red: #8e1c24;
+  --red-deep: #4a0e14;
+  --gold: #e4b23c;
+  --gold-soft: #f3d48a;
+  --cream: #f4e6c8;
+  --ink: #2a1414;
+  --wood: #3a2218;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #1a0b0c;
+  color: var(--cream);
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+#c {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.frame {
+  pointer-events: none;
+  position: fixed;
+  inset: 14px;
+  border: 2px solid rgba(228, 178, 60, 0.55);
+  box-shadow:
+    inset 0 0 0 6px rgba(74, 14, 20, 0.35),
+    0 0 0 8px rgba(26, 11, 12, 0.55);
+  z-index: 2;
+}
+
+.corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--gold);
+}
+
+.corner.tl { top: -3px; left: -3px; border-right: none; border-bottom: none; }
+.corner.tr { top: -3px; right: -3px; border-left: none; border-bottom: none; }
+.corner.bl { bottom: -3px; left: -3px; border-right: none; border-top: none; }
+.corner.br { bottom: -3px; right: -3px; border-left: none; border-top: none; }
+
+.hud {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 36px 28px;
+}
+
+.hud > * {
+  pointer-events: auto;
+}
+
+.brand {
+  max-width: 420px;
+}
+
+.brand h1 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  letter-spacing: 0.04em;
+  margin: 0;
+  color: var(--gold-soft);
+  text-shadow: 0 2px 0 #4a0e14, 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.brand h1 span {
+  display: block;
+  font-size: 0.42em;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cream);
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.brand p {
+  margin: 10px 0 0;
+  max-width: 34ch;
+  line-height: 1.45;
+  font-size: 0.98rem;
+  color: rgba(244, 230, 200, 0.82);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+button {
+  appearance: none;
+  border: 1px solid var(--gold);
+  background: linear-gradient(#9b242c, #6b151c);
+  color: var(--cream);
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #3a0c10;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #3a0c10;
+}
+
+button.ghost {
+  background: rgba(26, 11, 12, 0.72);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
+}
+
+.status {
+  margin-left: 6px;
+  font-size: 0.95rem;
+  color: var(--gold-soft);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.15rem;
+}
+
+.hint {
+  position: fixed;
+  left: 36px;
+  bottom: 28px;
+  z-index: 3;
+  font-size: 0.92rem;
+  color: rgba(244, 230, 200, 0.7);
+  max-width: 46ch;
+  line-height: 1.4;
+}
+
+.roster {
+  position: fixed;
+  right: 36px;
+  top: 32px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.roster button.doll-btn {
+  min-width: 170px;
+  text-align: right;
+  background: rgba(26, 11, 12, 0.7);
+  box-shadow: none;
+}
+
+.roster button.doll-btn.active {
+  background: linear-gradient(#9b242c, #6b151c);
+}
+
+.roster .ru {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.15em;
+  margin-right: 8px;
+}
+
+.loading {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: #1a0b0c;
+  color: var(--gold-soft);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2rem;
+}
+
+.loading[hidden] {
+  display: none;
+}
