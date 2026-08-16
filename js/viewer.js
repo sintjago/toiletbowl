@@ -199,10 +199,12 @@ class DollActor {
 }
 
 function lineupX(index) {
-  let x = -48;
-  for (let i = 0; i < index; i++) x += actors[i].w + 6;
-  x += actors[index].w / 2;
-  return x;
+  const gap = 8;
+  const widths = actors.map((a) => a.w);
+  const total = widths.reduce((s, w) => s + w, 0) + gap * (actors.length - 1);
+  let x = -total / 2;
+  for (let i = 0; i < index; i++) x += widths[i] + gap;
+  return x + widths[index] / 2;
 }
 
 function setStatus() {
@@ -295,7 +297,7 @@ function lineUp() {
     a.nestedIn = null;
     a.open = false;
     a.lidGoal = 0;
-    a.goal.set(lineupX(i) + 18, 0, 0);
+    a.goal.set(lineupX(i), 0, 0);
     a.goalYaw = 0;
   });
   selected = 0;
