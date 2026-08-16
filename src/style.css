@@ -5,6 +5,7 @@
   --muted: #3d5e58;
   --paper: #f7f3ea;
   --porcelain: #fffdf8;
+  --flush: #e27d4a;
   --shadow: 0 24px 60px rgba(18, 42, 38, 0.18);
 }
 
@@ -134,6 +135,44 @@ h1 {
 .view-btn.is-active {
   background: var(--ink);
   color: var(--paper);
+}
+
+.stage-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.flush-btn {
+  appearance: none;
+  border: 2px solid var(--ink);
+  background: var(--flush);
+  color: #fffdf8;
+  font: 600 14px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.flush-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.flush-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+#flush-status {
+  color: var(--muted);
+  font: 500 12px/1.4 "IBM Plex Mono", monospace;
+}
+
+.flush-canvas,
+.ascii-flush {
+  cursor: pointer;
 }
 
 .stage {

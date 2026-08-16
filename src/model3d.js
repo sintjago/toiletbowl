@@ -1,23 +1,31 @@
 import { createScene } from "./scene.js";
-import { createToilet } from "./toilet3d.js";
+import { applyToiletPose, createToilet } from "./toilet3d.js";
 
-export function mountPorcelain(root, { angleId }) {
-  const { scene, dispose } = createScene(root, { angleId });
-  scene.add(createToilet({ segments: 48, material: "porcelain" }));
-  return dispose;
-}
-
-export function mountWireframe(root, { angleId }) {
+function mountScene(root, { angleId, flush, background, segments, material }) {
+  const parts = createToilet({ segments, material });
   const { scene, dispose } = createScene(root, {
     angleId,
-    background: "#f4efe4",
+    background,
+    flush,
+    onFrame: (now) => applyToiletPose(parts, flush.sample(now)),
   });
-  scene.add(createToilet({ segments: 18, material: "wire" }));
+  scene.add(parts.group);
   return dispose;
 }
 
-export function mountLowpoly(root, { angleId }) {
-  const { scene, dispose } = createScene(root, { angleId });
-  scene.add(createToilet({ segments: 8, material: "porcelain" }));
-  return dispose;
+export function mountPorcelain(root, opts) {
+  return mountScene(root, { ...opts, segments: 48, material: "porcelain" });
+}
+
+export function mountWireframe(root, opts) {
+  return mountScene(root, {
+    ...opts,
+    background: "#f4efe4",
+    segments: 18,
+    material: "wire",
+  });
+}
+
+export function mountLowpoly(root, opts) {
+  return mountScene(root, { ...opts, segments: 8, material: "porcelain" });
 }

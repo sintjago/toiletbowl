@@ -28,13 +28,15 @@ function tileTexture() {
   return texture;
 }
 
-export function createScene(root, { angleId, background = "#e8f3ef" } = {}) {
+export function createScene(root, { angleId, background = "#e8f3ef", flush, onFrame } = {}) {
   const angle = angleById(angleId);
   const panel = document.createElement("div");
   panel.className = "panel";
   const canvas = document.createElement("canvas");
-  canvas.className = "webgl-canvas";
+  canvas.className = "webgl-canvas flush-canvas";
+  canvas.title = "Click to flush";
   panel.append(canvas);
+  canvas.addEventListener("click", () => flush?.start());
   root.append(panel);
 
   const renderer = new THREE.WebGLRenderer({
@@ -96,7 +98,8 @@ export function createScene(root, { angleId, background = "#e8f3ef" } = {}) {
   observer.observe(panel);
 
   let frame = 0;
-  const tick = () => {
+  const tick = (now) => {
+    onFrame?.(now);
     renderer.render(scene, camera);
     frame = requestAnimationFrame(tick);
   };
