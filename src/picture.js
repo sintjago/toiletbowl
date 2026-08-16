@@ -60,7 +60,7 @@ function sampleColor(img, u, v) {
 
 function drawFlush(ctx, img, box, pose, rig) {
   ctx.save();
-  ctx.translate(pose.shake, 0);
+  ctx.translate(pose.shake * 1.4, pose.shake * 0.35);
   ctx.drawImage(img, box.x, box.y, box.w, box.h);
 
   if (pose.handle < 0.01 && pose.lid < 0.01) {
@@ -72,36 +72,48 @@ function drawFlush(ctx, img, box, pose, rig) {
   const [bx, by] = px(box, bowl.cx, bowl.cy);
   const brx = bowl.rx * box.w;
   const bry = bowl.ry * box.h;
+  const lid = rig.lid;
 
   if (pose.lid > 0.02) {
     ctx.beginPath();
-    ctx.ellipse(bx, by, brx * 1.18, bry * 1.22, bowl.tilt, 0, Math.PI * 2);
-    ctx.fillStyle = sampleColor(img, 0.46, 0.44);
+    ctx.ellipse(
+      box.x + lid.cx * box.w,
+      box.y + lid.cy * box.h,
+      lid.rx * box.w,
+      lid.ry * box.h,
+      lid.tilt,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fillStyle = sampleColor(img, 0.44, 0.42);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(bx, by, brx * 1.12, bry * 1.16, bowl.tilt, 0, Math.PI * 2);
+    ctx.fillStyle = "#2f5d68";
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(bx, by, brx, bry, bowl.tilt, 0, Math.PI * 2);
-    ctx.fillStyle = "#4d7d8c";
-    ctx.globalAlpha = 0.55 + pose.level * 0.25;
+    ctx.fillStyle = `rgba(46, 140, 168, ${0.45 + pose.level * 0.4})`;
     ctx.fill();
-    ctx.globalAlpha = 1;
 
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(bx, by, brx * pose.level, bry * pose.level, bowl.tilt, 0, Math.PI * 2);
+    ctx.ellipse(bx, by, brx * (0.35 + pose.level * 0.65), bry * (0.35 + pose.level * 0.65), bowl.tilt, 0, Math.PI * 2);
     ctx.clip();
-    ctx.strokeStyle = "rgba(255,255,255,0.55)";
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 7; i += 1) {
-      const a = pose.swirl + i * 0.7;
+    ctx.strokeStyle = "rgba(255,255,255,0.8)";
+    ctx.lineWidth = 4;
+    for (let i = 0; i < 8; i += 1) {
+      const a = pose.swirl + i * 0.62;
       ctx.beginPath();
       ctx.ellipse(
-        bx + Math.cos(a) * brx * 0.18,
-        by + Math.sin(a) * bry * 0.18,
-        brx * (0.72 - i * 0.08),
-        bry * (0.72 - i * 0.08),
+        bx + Math.cos(a) * brx * 0.2,
+        by + Math.sin(a) * bry * 0.2,
+        brx * (0.78 - i * 0.07),
+        bry * (0.78 - i * 0.07),
         a,
         0,
-        Math.PI * 1.4,
+        Math.PI * 1.5,
       );
       ctx.stroke();
     }
@@ -193,24 +205,20 @@ export function mountPicture(root, { src, filter, flush, angleId }) {
   };
 
   const tick = (now) => {
-    const pose = flush.sample(now);
-    paint(pose);
-    frame = pose.active ? requestAnimationFrame(tick) : 0;
-  };
-
-  const kick = () => {
-    if (!frame) frame = requestAnimationFrame(tick);
+    paint(flush.sample(now));
+    frame = requestAnimationFrame(tick);
   };
 
   const ready = (async () => {
     img = src ? await loadImage(src) : await loadPhoto(angleId);
     paint(flush.sample());
+    if (!frame) frame = requestAnimationFrame(tick);
   })();
 
   const onClick = () => flush.start();
   canvas.addEventListener("click", onClick);
   ascii?.addEventListener("click", onClick);
-  const stopListen = flush.onStart(kick);
+  const stopListen = flush.onStart(() => {});
   const observer = new ResizeObserver(() => {
     if (img) paint(flush.sample());
   });

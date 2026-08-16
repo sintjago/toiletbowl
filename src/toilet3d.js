@@ -76,10 +76,9 @@ export function createToilet({
   group.add(seat);
 
   const lidPivot = new THREE.Group();
-  lidPivot.position.set(0, 0.88, -0.08);
-  const lid = new THREE.Mesh(new THREE.SphereGeometry(1, segments, 18), bodyMat);
-  lid.scale.set(0.58, 0.09, 0.74);
-  lid.position.set(0, 0.02, 0.36);
+  lidPivot.position.set(0, 0.86, -0.02);
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(1.08, 0.07, 1.22), bodyMat);
+  lid.position.set(0, 0.05, 0.58);
   lid.castShadow = true;
   lidPivot.add(lid);
   group.add(lidPivot);
