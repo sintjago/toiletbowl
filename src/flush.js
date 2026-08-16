@@ -19,7 +19,7 @@ function easeInOut(t) {
 export function poseAt(t) {
   const handle = easeOut(span(t, 0, 0.07)) * (1 - easeInOut(span(t, 0.78, 0.9)));
   const lid = easeInOut(span(t, 0.04, 0.18)) * (1 - easeInOut(span(t, 0.84, 0.98)));
-  const seat = easeInOut(span(t, 0.06, 0.2)) * (1 - easeInOut(span(t, 0.82, 0.96)));
+  const seat = 0;
   const drain = easeInOut(span(t, 0.16, 0.48));
   const fill = easeInOut(span(t, 0.52, 0.78));
   const level = 1 - drain * 0.88 + fill * 0.88;

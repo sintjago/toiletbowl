@@ -144,9 +144,9 @@ export function mountVoxels(root, { angleId, flush }) {
     onFrame: (now) => {
       const pose = flush.sample(now);
       handlePivot.rotation.z = pose.handle * 0.95;
-      lidPivot.rotation.x = -pose.lid * 1.15;
-      seatPivot.rotation.x = -(pose.seat || pose.lid) * 0.95;
-      waterGroup.visible = pose.lid > 0.12 || pose.seat > 0.12;
+      lidPivot.rotation.x = -pose.lid * 1.55;
+      seatPivot.rotation.x = 0;
+      waterGroup.visible = pose.lid > 0.08;
       waterGroup.rotation.y = pose.swirl;
       waterGroup.scale.setScalar(0.55 + pose.level * 0.45);
       group.position.x = pose.shake * 0.01;
