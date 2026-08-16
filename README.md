@@ -7,7 +7,7 @@ Style and camera are separate. Switching a style keeps the three-quarter closed-
 ## Now
 
 - **1 angle:** three-quarter, lid closed
-- **43 styles:** photo, photo-derived filters, locked 3D copies, and painted/printed/crafted restyles of the same picture
+- **59 styles:** photo, photo-derived filters, locked 3D copies, and painted/printed/crafted restyles of the same picture, plus cubism and isometric as best-effort extras
 
 ## Run
 
