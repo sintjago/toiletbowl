@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TOILETBOWL — just a toilet</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <header class="mast">
+        <p class="eyebrow">TOILETBOWL</p>
+        <h1>Just a toilet.</h1>
+        <p class="sub">Five portraits of porcelain. No shit yet.</p>
+      </header>
+
+      <nav class="views" aria-label="Toilet views">
+        <button class="view-btn is-active" data-view="ascii" type="button">ASCII</button>
+        <button class="view-btn" data-view="pixel" type="button">2D Pixel</button>
+        <button class="view-btn" data-view="image" type="button">Image</button>
+        <button class="view-btn" data-view="model" type="button">3D Model</button>
+        <button class="view-btn" data-view="voxels" type="button">Voxels</button>
+      </nav>
+
+      <main class="stage" id="stage"></main>
+
+      <footer class="colophon">
+        <span id="caption">Monospace throne</span>
+        <span class="hint" id="hint">Select text to copy. Flush later.</span>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
