@@ -7,10 +7,9 @@ const statusEl = document.getElementById("status");
 const rosterEl = document.getElementById("roster");
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = false;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -32,14 +31,6 @@ controls.maxDistance = 160;
 scene.add(new THREE.HemisphereLight(0xffe6c4, 0x3a1810, 0.7));
 const key = new THREE.DirectionalLight(0xfff1d6, 1.15);
 key.position.set(40, 70, 35);
-key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
-key.shadow.camera.near = 10;
-key.shadow.camera.far = 180;
-key.shadow.camera.left = -60;
-key.shadow.camera.right = 60;
-key.shadow.camera.top = 60;
-key.shadow.camera.bottom = -60;
 scene.add(key);
 const fill = new THREE.DirectionalLight(0x88aadd, 0.28);
 fill.position.set(-50, 20, -30);
@@ -78,7 +69,6 @@ const table = new THREE.Mesh(
   new THREE.MeshStandardMaterial({ map: woodTexture(), roughness: 0.7, metalness: 0.05 })
 );
 table.position.y = -1.6;
-table.receiveShadow = true;
 scene.add(table);
 
 const rug = new THREE.Mesh(
@@ -87,7 +77,6 @@ const rug = new THREE.Mesh(
 );
 rug.rotation.x = -Math.PI / 2;
 rug.position.y = 0.05;
-rug.receiveShadow = true;
 scene.add(rug);
 
 const raycaster = new THREE.Raycaster();
@@ -113,11 +102,11 @@ function hexOf(palette, i) {
 function makeInstanced(voxels, palette, origin) {
   const mesh = new THREE.InstancedMesh(
     boxGeo,
-    new THREE.MeshStandardMaterial({ roughness: 0.48, metalness: 0.06 }),
+    new THREE.MeshLambertMaterial({}),
     voxels.length
   );
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+  mesh.castShadow = false;
+  mesh.receiveShadow = false;
   const occ = new Set(voxels.map((v) => `${v[0]},${v[1]},${v[2]}`));
   voxels.forEach((v, i) => {
     dummy.position.set(v[0] - origin.x, v[1] - origin.y, v[2] - origin.z);
@@ -177,6 +166,14 @@ class DollActor {
     this.lidHit = hitProxy(this.w, this.h, this.d, lidMin, this.h, "lid", index);
     this.baseGroup.add(this.baseHit);
     this.lidGroup.add(this.lidHit);
+
+    const blob = new THREE.Mesh(
+      new THREE.CircleGeometry(Math.max(this.w, this.d) * 0.38, 20),
+      new THREE.MeshBasicMaterial({ color: 0x140808, transparent: true, opacity: 0.32, depthWrite: false })
+    );
+    blob.rotation.x = -Math.PI / 2;
+    blob.position.y = 0.07;
+    this.group.add(blob);
 
     this.open = false;
     this.lidT = 0;
@@ -256,8 +253,8 @@ function takeOut(i) {
   child.nestedIn = null;
   const p = parent.worldPos();
   child.pos.copy(p);
-  child.pos.y += 8;
-  child.goal.set(lineupX(i), 0, 14 + (i % 2) * 4);
+  child.pos.y += 12;
+  child.goal.set(p.x + parent.w * 0.75 + child.w * 0.55 + 6, 0, p.z + 10);
   child.goalYaw = 0;
   selected = i;
   setStatus();
@@ -306,21 +303,39 @@ function lineUp() {
 }
 
 function takeNext() {
-  const nested = actors.find((a) => a.nestedIn != null);
-  if (!nested) {
-    setStatus();
+  const a = actors[selected];
+  if (a.nestedIn != null) {
+    const parent = actors[a.nestedIn];
+    if (!parent.open) {
+      openDoll(parent.index);
+      return;
+    }
+    takeOut(a.index);
     return;
   }
+  const child = actors[selected + 1];
+  if (child && child.nestedIn === selected) {
+    if (!a.open) {
+      openDoll(selected);
+      return;
+    }
+    takeOut(child.index);
+    return;
+  }
+  const nested = actors.find((d) => d.nestedIn != null);
+  if (!nested) return;
   const parent = actors[nested.nestedIn];
-  if (!parent.open) {
-    openDoll(parent.index);
-    return;
-  }
-  takeOut(nested.index);
+  if (!parent.open) openDoll(parent.index);
+  else takeOut(nested.index);
 }
 
 function openNext() {
-  const closed = actors.find((a) => a.hollow && !a.open && (a.nestedIn == null || actors[a.nestedIn].open));
+  const a = actors[selected];
+  if (a.hollow && !a.open && (a.nestedIn == null || actors[a.nestedIn].open)) {
+    openDoll(selected);
+    return;
+  }
+  const closed = actors.find((d) => d.hollow && !d.open && (d.nestedIn == null || actors[d.nestedIn].open));
   if (closed) openDoll(closed.index);
   else takeNext();
 }
@@ -444,8 +459,8 @@ document.getElementById("btn-line").addEventListener("click", lineUp);
 document.getElementById("btn-nest").addEventListener("click", nestAll);
 
 function updateActors(dt) {
-  const k = 1 - Math.exp(-dt * 7);
-  const kLid = 1 - Math.exp(-dt * 8);
+  const k = 1 - Math.exp(-dt * 11);
+  const kLid = 1 - Math.exp(-dt * 12);
   actors.forEach((a) => {
     if (a.nestedIn != null) {
       const wp = a.worldPos();
@@ -459,8 +474,8 @@ function updateActors(dt) {
     a.group.position.copy(a.pos);
     a.group.rotation.y = a.yaw;
     const lift = a.lidT;
-    a.lidGroup.position.set(0, lift * (6 + a.h * 0.08), lift * -3.2);
-    a.lidGroup.rotation.x = lift * -0.42;
+    a.lidGroup.position.set(0, lift * (8 + a.h * 0.14), lift * -4.5);
+    a.lidGroup.rotation.x = lift * -0.55;
   });
 }
 
@@ -472,7 +487,7 @@ function onResize() {
 window.addEventListener("resize", onResize);
 
 function tick() {
-  const dt = Math.min(0.05, clock.getDelta());
+  const dt = Math.min(0.12, clock.getDelta());
   updateActors(dt);
   controls.update();
   renderer.render(scene, camera);
