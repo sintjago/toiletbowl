@@ -24,6 +24,8 @@ python3 -m http.server 8000
 
 Then open [http://localhost:8000](http://localhost:8000).
 
+![Open the lid to take out the inner doll](previews/viewer-open.png)
+
 - **Click** a closed doll to lift her lid
 - **Click** the doll inside to take her out
 - **Drag** a doll on the table; drop her onto an open parent to nest her again
