@@ -71,22 +71,22 @@ function coverOval(ctx, box, part, extra = 1) {
   );
 }
 
-function hingedEllipse(box, part, amount) {
-  const angle = amount * Math.PI * 0.62;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
+function hingedPart(box, part, amount) {
+  const theta = amount * Math.PI * 0.52;
   const [hx, hy] = px(box, part.hingeX, part.hingeY);
   const [cx, cy] = px(box, part.cx, part.cy);
-  const dx = cx - hx;
-  const dy = cy - hy;
-  const fold = 0.16 + 0.84 * Math.max(0, cos);
+  const fx = cx - hx;
+  const fy = cy - hy;
+  const len = Math.hypot(fx, fy) || 1;
+  const cos = Math.cos(theta);
+  const sin = Math.sin(theta);
   return {
-    x: hx + dx * fold,
-    y: hy + dy * fold - Math.hypot(dx, dy) * 0.42 * sin,
-    rx: part.rx * box.w * (0.78 + 0.22 * Math.abs(cos)),
-    ry: Math.max(5, part.ry * box.h * (0.1 + 0.9 * Math.abs(cos))),
+    x: hx + fx * cos - len * 0.22 * sin,
+    y: hy + fy * cos - len * 1.05 * sin,
+    rx: part.rx * box.w * (0.88 + 0.12 * Math.abs(cos)),
+    ry: Math.max(3, part.ry * box.h * Math.max(0.08, Math.abs(cos))),
     tilt: part.tilt,
-    underside: cos < 0,
+    edge: Math.abs(cos) < 0.18,
   };
 }
 
@@ -159,24 +159,26 @@ function drawFlush(ctx, img, box, pose, rig) {
     ctx.restore();
 
     if (seatAmt > 0.02) {
-      const seat = hingedEllipse(box, rig.seat, seatAmt);
+      const seat = hingedPart(box, rig.seat, seatAmt);
       ctx.beginPath();
       ctx.ellipse(seat.x, seat.y, seat.rx, seat.ry, seat.tilt, 0, Math.PI * 2);
       ctx.fillStyle = porcelain;
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(seat.x, seat.y, seat.rx * 0.62, seat.ry * 0.55, seat.tilt, 0, Math.PI * 2);
-      ctx.fillStyle = "#245864";
-      ctx.fill();
+      if (!seat.edge) {
+        ctx.beginPath();
+        ctx.ellipse(seat.x, seat.y, seat.rx * 0.62, seat.ry * 0.55, seat.tilt, 0, Math.PI * 2);
+        ctx.fillStyle = "#1f4d56";
+        ctx.fill();
+      }
     }
 
     if (lidAmt > 0.02) {
-      const lid = hingedEllipse(box, rig.lid, lidAmt);
+      const lid = hingedPart(box, rig.lid, lidAmt);
       ctx.beginPath();
       ctx.ellipse(lid.x, lid.y, lid.rx, lid.ry, lid.tilt, 0, Math.PI * 2);
-      ctx.fillStyle = lid.underside ? shade : porcelain;
+      ctx.fillStyle = porcelain;
       ctx.fill();
-      ctx.strokeStyle = "rgba(22, 51, 47, 0.22)";
+      ctx.strokeStyle = "rgba(22, 51, 47, 0.28)";
       ctx.lineWidth = 2;
       ctx.stroke();
     }
