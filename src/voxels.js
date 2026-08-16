@@ -4,14 +4,12 @@ import { createScene } from "./scene.js";
 const EMPTY = 0;
 const PORCELAIN = 1;
 const SHADE = 2;
-const WATER = 3;
-const CHROME = 4;
-const TILE = 5;
+const CHROME = 3;
+const TILE = 4;
 
 const COLORS = {
   [PORCELAIN]: 0xfffdf8,
   [SHADE]: 0xd9d2c4,
-  [WATER]: 0x7aa8b8,
   [CHROME]: 0xc9d4d1,
   [TILE]: 0x8fb8ae,
 };
@@ -26,15 +24,12 @@ function box(voxels, x0, y0, z0, x1, y1, z1, kind) {
   }
 }
 
-function ring(voxels, cx, y, cz, outer, inner, kind, shadeKind = SHADE) {
-  for (let z = cz - outer; z <= cz + outer; z += 1) {
-    for (let x = cx - outer; x <= cx + outer; x += 1) {
-      const dx = x - cx;
-      const dz = z - cz;
-      const d = Math.hypot(dx, dz);
-      if (d <= outer + 0.35 && d >= inner - 0.15) {
-        voxels[y][z][x] = d > outer - 0.4 ? shadeKind : kind;
-      }
+function oval(voxels, cx, y, cz, rx, rz, kind) {
+  for (let z = cz - rz; z <= cz + rz; z += 1) {
+    for (let x = cx - rx; x <= cx + rx; x += 1) {
+      const dx = (x - cx) / rx;
+      const dz = (z - cz) / rz;
+      if (dx * dx + dz * dz <= 1.05) voxels[y][z][x] = kind;
     }
   }
 }
@@ -48,27 +43,25 @@ function buildToilet() {
   );
 
   box(voxels, 0, 0, 0, w - 1, 0, d - 1, TILE);
-  box(voxels, 4, 1, 4, 10, 2, 10, PORCELAIN);
-  box(voxels, 3, 3, 3, 11, 4, 11, PORCELAIN);
-  ring(voxels, 7, 5, 7, 5, 2, PORCELAIN);
-  ring(voxels, 7, 6, 7, 5, 2, PORCELAIN);
-  box(voxels, 6, 4, 6, 8, 4, 8, WATER);
-  box(voxels, 6, 5, 6, 8, 5, 8, WATER);
+  box(voxels, 0, 1, 0, w - 1, h - 1, 0, TILE);
+  box(voxels, 4, 1, 5, 10, 3, 11, PORCELAIN);
+  oval(voxels, 7, 4, 8, 5, 4, PORCELAIN);
+  oval(voxels, 7, 5, 8, 5, 4, SHADE);
+  oval(voxels, 7, 6, 8, 5, 4, PORCELAIN);
   box(voxels, 3, 7, 1, 11, 12, 3, PORCELAIN);
-  box(voxels, 4, 12, 1, 10, 12, 3, SHADE);
-  box(voxels, 3, 7, 1, 11, 7, 3, SHADE);
-  voxels[11][4][11] = CHROME;
-  voxels[11][4][12] = CHROME;
-  voxels[11][4][13] = CHROME;
+  box(voxels, 3, 12, 1, 11, 12, 3, SHADE);
+  voxels[11][3][4] = CHROME;
+  voxels[11][4][4] = CHROME;
+  voxels[11][4][3] = CHROME;
 
   return { voxels, w, h, d };
 }
 
-export function mountVoxels(root) {
-  const { scene, dispose } = createScene(root, { cameraZ: 7.2, cameraY: 2.4 });
+export function mountVoxels(root, { angleId }) {
+  const { scene, dispose } = createScene(root, { angleId });
   const { voxels, w, h, d } = buildToilet();
   const group = new THREE.Group();
-  const size = 0.22;
+  const size = 0.2;
   const geo = new THREE.BoxGeometry(size * 0.94, size * 0.94, size * 0.94);
 
   for (let y = 0; y < h; y += 1) {
@@ -80,13 +73,13 @@ export function mountVoxels(root) {
           geo,
           new THREE.MeshStandardMaterial({
             color: COLORS[kind],
-            roughness: kind === WATER ? 0.12 : 0.35,
+            roughness: 0.35,
             metalness: kind === CHROME ? 0.8 : 0.04,
           }),
         );
         mesh.position.set(
           (x - (w - 1) / 2) * size,
-          y * size + 0.12,
+          y * size + 0.1,
           (z - (d - 1) / 2) * size,
         );
         mesh.castShadow = true;

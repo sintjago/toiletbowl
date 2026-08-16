@@ -1,25 +1,17 @@
 # TOILETBOWL
 
-A gallery of one toilet, five ways. No shit yet.
+Same toilet. Same angle. Many styles. No shit yet.
 
-## Views
+Style and camera are separate. Switching a style keeps the three-quarter closed-lid pose. More angles can be added later as new folders under `public/toilets/` plus a camera preset in `src/catalog.js`.
 
-- **ASCII** — a monospace throne
-- **2D Pixel** — 32×32 porcelain
-- **Image** — a studio still of the bowl
-- **3D Model** — orbitable porcelain
-- **Voxels** — a cubic commode
+## Now
+
+- **1 angle:** three-quarter, lid closed
+- **43 styles:** photo, photo-derived filters, locked 3D copies, and painted/printed/crafted restyles of the same picture
 
 ## Run
 
 ```bash
 npm install
 npm run dev
-```
-
-Then open the local Vite URL. Use the tabs to switch portraits.
-
-```bash
-npm run build
-npm run preview
 ```

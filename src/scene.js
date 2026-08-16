@@ -1,7 +1,35 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { angleById } from "./catalog.js";
 
-export function createScene(root, { cameraZ = 5.4, cameraY = 1.6 } = {}) {
+function tileTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#d7efe8";
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.strokeStyle = "#f7fff9";
+  ctx.lineWidth = 6;
+  for (let i = 0; i <= 256; i += 32) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i, 256);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, i);
+    ctx.lineTo(256, i);
+    ctx.stroke();
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(6, 6);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+export function createScene(root, { angleId, background = "#e8f3ef" } = {}) {
+  const angle = angleById(angleId);
   const panel = document.createElement("div");
   panel.className = "panel";
   const canvas = document.createElement("canvas");
@@ -20,38 +48,40 @@ export function createScene(root, { cameraZ = 5.4, cameraY = 1.6 } = {}) {
   renderer.toneMappingExposure = 1.05;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#eef6f3");
+  scene.background = new THREE.Color(background);
 
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 80);
-  camera.position.set(3.4, cameraY, cameraZ);
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 80);
+  camera.position.set(...angle.camera.position);
+  camera.lookAt(...angle.camera.target);
 
-  const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.target.set(0, 0.85, 0);
-  controls.maxPolarAngle = Math.PI * 0.49;
-  controls.minDistance = 3;
-  controls.maxDistance = 10;
-
-  const hemi = new THREE.HemisphereLight("#f7fff9", "#8fb8ae", 1.1);
+  const hemi = new THREE.HemisphereLight("#f7fff9", "#8fb8ae", 1.05);
   scene.add(hemi);
 
-  const key = new THREE.DirectionalLight("#ffffff", 1.35);
-  key.position.set(4, 7, 3);
+  const key = new THREE.DirectionalLight("#ffffff", 1.3);
+  key.position.set(3.4, 6.2, 2.8);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
   scene.add(key);
 
-  const fill = new THREE.DirectionalLight("#cfe8e2", 0.55);
-  fill.position.set(-4, 2, -2);
+  const fill = new THREE.DirectionalLight("#cfe8e2", 0.5);
+  fill.position.set(-3.2, 2.2, -1.4);
   scene.add(fill);
 
-  const floor = new THREE.Mesh(
-    new THREE.CircleGeometry(6, 48),
-    new THREE.MeshStandardMaterial({ color: "#d7efe8", roughness: 0.9 }),
-  );
+  const tiles = new THREE.MeshStandardMaterial({
+    map: tileTexture(),
+    roughness: 0.92,
+    metalness: 0.02,
+  });
+
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), tiles);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
+
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), tiles);
+  wall.position.set(0, 3, -2.4);
+  wall.receiveShadow = true;
+  scene.add(wall);
 
   const resize = () => {
     const width = panel.clientWidth;
@@ -67,7 +97,6 @@ export function createScene(root, { cameraZ = 5.4, cameraY = 1.6 } = {}) {
 
   let frame = 0;
   const tick = () => {
-    controls.update();
     renderer.render(scene, camera);
     frame = requestAnimationFrame(tick);
   };
@@ -76,12 +105,11 @@ export function createScene(root, { cameraZ = 5.4, cameraY = 1.6 } = {}) {
   const dispose = () => {
     cancelAnimationFrame(frame);
     observer.disconnect();
-    controls.dispose();
     renderer.dispose();
     panel.remove();
   };
 
-  return { scene, dispose };
+  return { scene, camera, dispose };
 }
 
 export const porcelain = {
@@ -94,12 +122,4 @@ export const chrome = {
   color: "#c9d4d1",
   roughness: 0.18,
   metalness: 0.85,
-};
-
-export const water = {
-  color: "#7aa8b8",
-  roughness: 0.08,
-  metalness: 0.1,
-  transparent: true,
-  opacity: 0.72,
 };

@@ -17,23 +17,28 @@
       <header class="mast">
         <p class="eyebrow">TOILETBOWL</p>
         <h1>Just a toilet.</h1>
-        <p class="sub">Five portraits of porcelain. No shit yet.</p>
+        <p class="sub">Same bowl. Same angle. Many styles. No shit yet.</p>
       </header>
 
-      <nav class="views" aria-label="Toilet views">
-        <button class="view-btn is-active" data-view="ascii" type="button">ASCII</button>
-        <button class="view-btn" data-view="pixel" type="button">2D Pixel</button>
-        <button class="view-btn" data-view="image" type="button">Image</button>
-        <button class="view-btn" data-view="model" type="button">3D Model</button>
-        <button class="view-btn" data-view="voxels" type="button">Voxels</button>
-      </nav>
+      <div class="workspace">
+        <aside class="picker">
+          <section class="style-group">
+            <h2>Angle</h2>
+            <div class="style-row" id="angles"></div>
+            <p class="picker-note">More cameras later. Style changes keep this pose.</p>
+          </section>
+          <div id="styles"></div>
+        </aside>
 
-      <main class="stage" id="stage"></main>
-
-      <footer class="colophon">
-        <span id="caption">Monospace throne</span>
-        <span class="hint" id="hint">Select text to copy. Flush later.</span>
-      </footer>
+        <div class="stage-col">
+          <main class="stage" id="stage"></main>
+          <footer class="colophon">
+            <span id="caption">Studio still</span>
+            <span class="hint" id="hint">The canonical bowl.</span>
+          </footer>
+          <p class="count" id="count"></p>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
