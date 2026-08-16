@@ -59,12 +59,23 @@ function renderPicker() {
   count.textContent = `${STYLES.length} styles · ${ANGLES.length} angle`;
 }
 
+function holdStage() {
+  teardown?.();
+  teardown = null;
+  stage.replaceChildren();
+  const wait = document.createElement("div");
+  wait.className = "panel loading";
+  wait.textContent = "Same toilet incoming.";
+  stage.append(wait);
+}
+
 async function show() {
   const id = (requestId += 1);
   const style = styleById(styleId);
   caption.textContent = style.caption;
   hint.textContent = style.hint;
   renderPicker();
+  holdStage();
 
   let mount;
   if (style.kind === "image") mount = mountImage;
@@ -72,7 +83,7 @@ async function show() {
   if (style.kind === "scene") mount = await scenes[style.scene]();
   if (id !== requestId) return;
 
-  teardown?.();
+  stage.replaceChildren();
   teardown = mount(stage, { angleId, style });
 }
 
