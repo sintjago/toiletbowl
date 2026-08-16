@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Матрёшка — voxel nesting dolls</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="frame">
+    <span class="corner tl"></span>
+    <span class="corner tr"></span>
+    <span class="corner bl"></span>
+    <span class="corner br"></span>
+  </div>
+  <div class="loading" id="loading">Painting the dolls…</div>
+  <div class="hud">
+    <div class="brand">
+      <h1>Матрёшка<span>Voxel nesting dolls</span></h1>
+      <p>A Russian matryoshka set, one inside the other. Click a doll to open her. Click the one inside to take her out.</p>
+    </div>
+    <div class="controls">
+      <button id="btn-open">Open lid</button>
+      <button id="btn-take">Take out</button>
+      <button id="btn-line">Line up</button>
+      <button id="btn-nest" class="ghost">Nest all</button>
+      <span class="status" id="status"></span>
+    </div>
+  </div>
+  <div class="roster" id="roster"></div>
+  <p class="hint">Drag to look around · click a doll to lift the lid · click the inner doll to remove her · drag dolls on the table to rearrange</p>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/viewer.js"></script>
+</body>
+</html>
