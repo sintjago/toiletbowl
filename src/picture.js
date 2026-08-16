@@ -78,11 +78,11 @@ function hingedPart(box, part, amount) {
   const origRx = part.rx * box.w;
   const origRy = part.ry * box.h;
   return {
-    x: cx + (hx - cx) * t * 0.72,
-    y: cy + (hy - cy) * t * 0.72 - t * 0.06 * box.h,
-    rx: origRx * (1 - 0.42 * t),
-    ry: origRy * (1 - 0.25 * t) + 0.085 * box.h * t,
-    tilt: part.tilt + t * 0.55,
+    x: cx + (hx - cx) * t * 0.78,
+    y: cy + (hy - cy) * t * 0.78 - t * 0.04 * box.h,
+    rx: origRx * (1 - 0.58 * t),
+    ry: origRy * (1 - 0.2 * t) + 0.042 * box.h * t,
+    tilt: part.tilt + t * 0.5,
   };
 }
 
@@ -124,6 +124,11 @@ function drawFlush(ctx, img, box, pose, rig) {
     ctx.ellipse(bx, by, brx, bry, bowl.tilt, 0, Math.PI * 2);
     ctx.fillStyle = shade;
     ctx.fill("evenodd");
+    ctx.beginPath();
+    ctx.ellipse(bx, by, brx, bry, bowl.tilt, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(22, 51, 47, 0.35)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
 
     ctx.beginPath();
     ctx.ellipse(bx, by, brx * 1.02, bry * 1.08, bowl.tilt, 0, Math.PI * 2);
@@ -173,8 +178,8 @@ function drawFlush(ctx, img, box, pose, rig) {
     ctx.ellipse(lid.x, lid.y, lid.rx, lid.ry, lid.tilt, 0, Math.PI * 2);
     ctx.fillStyle = porcelain;
     ctx.fill();
-    ctx.strokeStyle = "rgba(22, 51, 47, 0.28)";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(22, 51, 47, 0.45)";
+    ctx.lineWidth = 2.5;
     ctx.stroke();
   }
 

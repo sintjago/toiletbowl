@@ -29,10 +29,10 @@ export const THREE_QUARTER = {
     hingeY: 0.4,
   },
   bowl: {
-    cx: 0.588,
-    cy: 0.468,
-    rx: 0.148,
-    ry: 0.052,
+    cx: 0.585,
+    cy: 0.46,
+    rx: 0.155,
+    ry: 0.055,
     tilt: 0.28,
   },
 };

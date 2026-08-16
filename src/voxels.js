@@ -16,7 +16,7 @@ const COLORS = {
   [CHROME]: 0xc9d4d1,
   [TILE]: 0x8fb8ae,
   [WATER]: 0x4d7d8c,
-  [LID]: 0xfffdf8,
+  [LID]: 0xf3e6cc,
   [SEAT]: 0xf0ebe0,
 };
 
@@ -57,9 +57,10 @@ function buildToilet() {
   box(voxels, 0, 1, 0, w - 1, h - 1, 0, TILE);
   box(voxels, 4, 1, 5, 10, 3, 11, PORCELAIN);
   ring(voxels, 7, 4, 8, 5, 4, 0.35, PORCELAIN);
+  box(voxels, 5, 3, 6, 9, 3, 10, PORCELAIN);
   ring(voxels, 7, 5, 8, 5, 4, 0.42, SEAT);
   oval(voxels, 7, 6, 8, 5, 4, LID);
-  box(voxels, 6, 4, 7, 8, 4, 9, WATER);
+  box(voxels, 5, 4, 6, 9, 4, 10, WATER);
   box(voxels, 3, 7, 1, 11, 12, 3, PORCELAIN);
   box(voxels, 3, 12, 1, 11, 12, 3, SHADE);
   voxels[11][3][4] = CHROME;
@@ -144,11 +145,11 @@ export function mountVoxels(root, { angleId, flush }) {
     onFrame: (now) => {
       const pose = flush.sample(now);
       handlePivot.rotation.z = pose.handle * 0.95;
-      lidPivot.rotation.x = -pose.lid * 1.55;
+      lidPivot.rotation.x = -pose.lid * 1.25;
       seatPivot.rotation.x = 0;
       waterGroup.visible = pose.lid > 0.08;
       waterGroup.rotation.y = pose.swirl;
-      waterGroup.scale.setScalar(0.55 + pose.level * 0.45);
+      waterGroup.scale.setScalar(0.9 + pose.level * 0.1);
       group.position.x = pose.shake * 0.01;
     },
   });
