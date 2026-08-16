@@ -110,7 +110,7 @@ function watchFlush() {
   }
   flushBtn.disabled = true;
   flushBtn.textContent = "Flushing";
-  flushStatus.textContent = "Handle, lid, swirl, refill.";
+  flushStatus.textContent = "Handle, seat, lid, swirl, refill.";
   flushWatch = requestAnimationFrame(watchFlush);
 }
 

@@ -58,59 +58,98 @@ function sampleColor(img, u, v) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+function coverOval(ctx, box, part, extra = 1) {
+  ctx.beginPath();
+  ctx.ellipse(
+    box.x + part.cx * box.w,
+    box.y + part.cy * box.h,
+    part.rx * box.w * extra,
+    part.ry * box.h * extra,
+    part.tilt,
+    0,
+    Math.PI * 2,
+  );
+}
+
+function hingedEllipse(box, part, amount) {
+  const angle = amount * Math.PI * 0.62;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const [hx, hy] = px(box, part.hingeX, part.hingeY);
+  const [cx, cy] = px(box, part.cx, part.cy);
+  const dx = cx - hx;
+  const dy = cy - hy;
+  const fold = 0.16 + 0.84 * Math.max(0, cos);
+  return {
+    x: hx + dx * fold,
+    y: hy + dy * fold - Math.hypot(dx, dy) * 0.42 * sin,
+    rx: part.rx * box.w * (0.78 + 0.22 * Math.abs(cos)),
+    ry: Math.max(5, part.ry * box.h * (0.1 + 0.9 * Math.abs(cos))),
+    tilt: part.tilt,
+    underside: cos < 0,
+  };
+}
+
 function drawFlush(ctx, img, box, pose, rig) {
   ctx.save();
   ctx.translate(pose.shake * 1.4, pose.shake * 0.35);
   ctx.drawImage(img, box.x, box.y, box.w, box.h);
 
-  if (pose.handle < 0.01 && pose.lid < 0.01) {
+  const lidAmt = pose.lid || 0;
+  const seatAmt = pose.seat || 0;
+  if (pose.handle < 0.01 && lidAmt < 0.01 && seatAmt < 0.01) {
     ctx.restore();
     return;
   }
 
-  const bowl = rig.bowl;
-  const [bx, by] = px(box, bowl.cx, bowl.cy);
-  const brx = bowl.rx * box.w;
-  const bry = bowl.ry * box.h;
-  const lid = rig.lid;
+  const porcelain = sampleColor(img, 0.5, 0.36);
+  const shade = sampleColor(img, 0.44, 0.42);
 
-  if (pose.lid > 0.02) {
-    ctx.beginPath();
-    ctx.ellipse(
-      box.x + lid.cx * box.w,
-      box.y + lid.cy * box.h,
-      lid.rx * box.w,
-      lid.ry * box.h,
-      lid.tilt,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fillStyle = sampleColor(img, 0.44, 0.42);
+  if (lidAmt > 0.02 || seatAmt > 0.02) {
+    coverOval(ctx, box, rig.lid, 1.08);
+    ctx.fillStyle = porcelain;
     ctx.fill();
 
+    const bowl = rig.bowl;
+    const [bx, by] = px(box, bowl.cx, bowl.cy);
+    const brx = bowl.rx * box.w;
+    const bry = bowl.ry * box.h;
+
     ctx.beginPath();
-    ctx.ellipse(bx, by, brx * 1.12, bry * 1.16, bowl.tilt, 0, Math.PI * 2);
-    ctx.fillStyle = "#2f5d68";
+    ctx.ellipse(bx, by, brx * 1.18, bry * 1.2, bowl.tilt, 0, Math.PI * 2);
+    ctx.fillStyle = shade;
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(bx, by, brx, bry, bowl.tilt, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(46, 140, 168, ${0.45 + pose.level * 0.4})`;
+    ctx.fillStyle = "#245864";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(bx, by, brx * 0.92, bry * 0.92, bowl.tilt, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(46, 140, 168, ${0.5 + pose.level * 0.4})`;
     ctx.fill();
 
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(bx, by, brx * (0.35 + pose.level * 0.65), bry * (0.35 + pose.level * 0.65), bowl.tilt, 0, Math.PI * 2);
+    ctx.ellipse(
+      bx,
+      by,
+      brx * (0.35 + pose.level * 0.6),
+      bry * (0.35 + pose.level * 0.6),
+      bowl.tilt,
+      0,
+      Math.PI * 2,
+    );
     ctx.clip();
-    ctx.strokeStyle = "rgba(255,255,255,0.8)";
+    ctx.strokeStyle = "rgba(255,255,255,0.82)";
     ctx.lineWidth = 4;
     for (let i = 0; i < 8; i += 1) {
       const a = pose.swirl + i * 0.62;
       ctx.beginPath();
       ctx.ellipse(
-        bx + Math.cos(a) * brx * 0.2,
-        by + Math.sin(a) * bry * 0.2,
-        brx * (0.78 - i * 0.07),
-        bry * (0.78 - i * 0.07),
+        bx + Math.cos(a) * brx * 0.18,
+        by + Math.sin(a) * bry * 0.18,
+        brx * (0.74 - i * 0.07),
+        bry * (0.74 - i * 0.07),
         a,
         0,
         Math.PI * 1.5,
@@ -118,28 +157,29 @@ function drawFlush(ctx, img, box, pose, rig) {
       ctx.stroke();
     }
     ctx.restore();
-  }
 
-  if (pose.lid > 0.02) {
-    const lid = rig.lid;
-    const [hx, hy] = px(box, lid.hingeX, lid.hingeY);
-    ctx.save();
-    ctx.translate(hx, hy);
-    ctx.rotate(-pose.lid * 2.05);
-    ctx.translate(-hx, -hy);
-    ctx.beginPath();
-    ctx.ellipse(
-      box.x + lid.cx * box.w,
-      box.y + lid.cy * box.h,
-      lid.rx * box.w,
-      lid.ry * box.h,
-      lid.tilt,
-      0,
-      Math.PI * 2,
-    );
-    ctx.clip();
-    ctx.drawImage(img, box.x, box.y, box.w, box.h);
-    ctx.restore();
+    if (seatAmt > 0.02) {
+      const seat = hingedEllipse(box, rig.seat, seatAmt);
+      ctx.beginPath();
+      ctx.ellipse(seat.x, seat.y, seat.rx, seat.ry, seat.tilt, 0, Math.PI * 2);
+      ctx.fillStyle = porcelain;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(seat.x, seat.y, seat.rx * 0.62, seat.ry * 0.55, seat.tilt, 0, Math.PI * 2);
+      ctx.fillStyle = "#245864";
+      ctx.fill();
+    }
+
+    if (lidAmt > 0.02) {
+      const lid = hingedEllipse(box, rig.lid, lidAmt);
+      ctx.beginPath();
+      ctx.ellipse(lid.x, lid.y, lid.rx, lid.ry, lid.tilt, 0, Math.PI * 2);
+      ctx.fillStyle = lid.underside ? shade : porcelain;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(22, 51, 47, 0.22)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
   }
 
   if (pose.handle > 0.01) {
