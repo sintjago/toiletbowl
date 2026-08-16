@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TOILETBOWL — just a toilet</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <header class="mast">
+        <p class="eyebrow">TOILETBOWL</p>
+        <h1>Just a toilet.</h1>
+        <p class="sub">Same bowl. Same angle. Many styles. No shit yet.</p>
+      </header>
+
+      <div class="workspace">
+        <aside class="picker">
+          <section class="style-group">
+            <h2>Angle</h2>
+            <div class="style-row" id="angles"></div>
+            <p class="picker-note">More cameras later. Style changes keep this pose.</p>
+          </section>
+          <div id="styles"></div>
+        </aside>
+
+        <div class="stage-col">
+          <div class="stage-tools">
+            <button id="flush" class="flush-btn" type="button">Flush</button>
+            <span id="flush-status">Click the bowl or press Flush.</span>
+          </div>
+          <main class="stage" id="stage"></main>
+          <footer class="colophon">
+            <span id="caption">Studio still</span>
+            <span class="hint" id="hint">The canonical bowl.</span>
+          </footer>
+          <p class="count" id="count"></p>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
