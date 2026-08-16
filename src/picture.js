@@ -72,21 +72,16 @@ function coverOval(ctx, box, part, extra = 1) {
 }
 
 function hingedPart(box, part, amount) {
-  const theta = amount * Math.PI * 0.52;
+  const t = amount;
   const [hx, hy] = px(box, part.hingeX, part.hingeY);
   const [cx, cy] = px(box, part.cx, part.cy);
-  const fx = cx - hx;
-  const fy = cy - hy;
-  const len = Math.hypot(fx, fy) || 1;
-  const cos = Math.cos(theta);
-  const sin = Math.sin(theta);
   return {
-    x: hx + fx * cos - len * 0.22 * sin,
-    y: hy + fy * cos - len * 1.05 * sin,
-    rx: part.rx * box.w * (0.88 + 0.12 * Math.abs(cos)),
-    ry: Math.max(3, part.ry * box.h * Math.max(0.08, Math.abs(cos))),
-    tilt: part.tilt,
-    edge: Math.abs(cos) < 0.18,
+    x: cx + (hx - cx) * t * 0.82 - t * 0.03 * box.w,
+    y: cy + (hy - cy) * t * 0.82 - t * 0.14 * box.h,
+    rx: part.rx * box.w * (1 - 0.12 * t),
+    ry: Math.max(3, part.ry * box.h * (1 - 0.84 * t)),
+    tilt: part.tilt - t * 0.45,
+    edge: t > 0.82,
   };
 }
 

@@ -78,7 +78,7 @@ export function mountVoxels(root, { angleId, flush }) {
   const waterGroup = new THREE.Group();
   const size = 0.2;
   const geo = new THREE.BoxGeometry(size * 0.94, size * 0.94, size * 0.94);
-  const backZ = (4 - (d - 1) / 2) * size;
+  const backZ = (5.5 - (d - 1) / 2) * size;
   const lidAnchor = new THREE.Vector3(0, 6 * size + 0.1, backZ);
   const seatAnchor = new THREE.Vector3(0, 5 * size + 0.1, backZ);
   const handleAnchor = new THREE.Vector3(
