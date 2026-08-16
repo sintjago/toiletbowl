@@ -1,9 +1,7 @@
 import "./style.css";
 import { mountAscii } from "./ascii.js";
 import { mountImage } from "./image.js";
-import { mountModel } from "./model3d.js";
 import { mountPixel } from "./pixel.js";
-import { mountVoxels } from "./voxels.js";
 
 const CAPTIONS = {
   ascii: ["Monospace throne", "Select text to copy. Flush later."],
@@ -14,11 +12,11 @@ const CAPTIONS = {
 };
 
 const mounts = {
-  ascii: mountAscii,
-  pixel: mountPixel,
-  image: mountImage,
-  model: mountModel,
-  voxels: mountVoxels,
+  ascii: () => Promise.resolve(mountAscii),
+  pixel: () => Promise.resolve(mountPixel),
+  image: () => Promise.resolve(mountImage),
+  model: () => import("./model3d.js").then((mod) => mod.mountModel),
+  voxels: () => import("./voxels.js").then((mod) => mod.mountVoxels),
 };
 
 const stage = document.querySelector("#stage");
@@ -28,18 +26,22 @@ const buttons = [...document.querySelectorAll(".view-btn")];
 
 let current = "ascii";
 let teardown = mountAscii(stage);
+let requestId = 0;
 
-function show(view) {
+async function show(view) {
   if (view === current) return;
-  teardown?.();
+  const id = (requestId += 1);
   current = view;
-  teardown = mounts[view](stage);
   const [title, note] = CAPTIONS[view];
   caption.textContent = title;
   hint.textContent = note;
   buttons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.view === view);
   });
+  const mount = await mounts[view]();
+  if (id !== requestId) return;
+  teardown?.();
+  teardown = mount(stage);
 }
 
 buttons.forEach((button) => {
