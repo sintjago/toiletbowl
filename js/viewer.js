@@ -19,14 +19,14 @@ scene.background = new THREE.Color(0x1a0b0c);
 scene.fog = new THREE.Fog(0x1a0b0c, 110, 240);
 
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 500);
-camera.position.set(8, 32, 72);
+camera.position.set(18, 38, 96);
 
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
-controls.target.set(0, 22, 0);
+controls.target.set(0, 24, 0);
 controls.maxPolarAngle = Math.PI * 0.48;
-controls.minDistance = 24;
-controls.maxDistance = 160;
+controls.minDistance = 30;
+controls.maxDistance = 240;
 
 scene.add(new THREE.HemisphereLight(0xffe6c4, 0x3a1810, 0.75));
 const key = new THREE.DirectionalLight(0xfff1d6, 1.05);
@@ -90,7 +90,7 @@ let dragging = null;
 let dragOffset = new THREE.Vector3();
 let pointerDown = null;
 let busy = false;
-let autoCam = true;
+let autoCam = false;
 const clock = new THREE.Clock();
 const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const planeHit = new THREE.Vector3();
@@ -247,9 +247,10 @@ function frameVisible() {
     maxh = Math.max(maxh, a.h);
   });
   const cx = (minx + maxx) / 2;
-  const span = Math.max(36, maxx - minx + 16);
-  targetGoal.set(cx, maxh * 0.42, 0);
-  camGoal.set(cx + span * 0.12, Math.max(26, maxh * 0.62), Math.max(48, span * 1.05));
+  const span = Math.max(40, maxx - minx + 24);
+  const dist = Math.max(88, span * 1.15 + maxh * 0.35);
+  targetGoal.set(cx, maxh * 0.45, 0);
+  camGoal.set(cx + dist * 0.16, Math.max(32, maxh * 0.55 + 10), dist);
   autoCam = true;
 }
 
@@ -299,7 +300,6 @@ function takeOut(i) {
   child.goalYaw = 0;
   selected = i;
   setStatus();
-  frameVisible();
 }
 
 function nestIntoParent(childIndex) {
@@ -548,6 +548,7 @@ function updateActors(dt) {
     const ck = 1 - Math.exp(-dt * 2.2);
     camera.position.lerp(camGoal, ck);
     controls.target.lerp(targetGoal, ck);
+    camera.lookAt(controls.target);
   }
 }
 
@@ -561,7 +562,7 @@ window.addEventListener("resize", onResize);
 function tick() {
   const dt = Math.min(0.12, clock.getDelta());
   updateActors(dt);
-  controls.update();
+  if (!autoCam) controls.update();
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
@@ -582,7 +583,8 @@ async function main() {
   }
   buildRoster();
   setStatus();
-  frameVisible();
+  camGoal.copy(camera.position);
+  targetGoal.copy(controls.target);
   loading.hidden = true;
   tick();
 }

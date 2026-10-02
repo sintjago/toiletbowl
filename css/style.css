@@ -153,7 +153,7 @@ button#btn-unpack {
 .hint {
   position: fixed;
   left: 36px;
-  bottom: 28px;
+  bottom: 96px;
   z-index: 3;
   font-size: 0.92rem;
   color: rgba(244, 230, 200, 0.7);
