@@ -149,15 +149,15 @@ SPECS = [
 
 
 PROFILE = [
-    (0.00, 0.60),
-    (0.05, 0.78),
-    (0.28, 1.00),
-    (0.46, 0.90),
-    (0.52, 0.78),  # gentle neck — must stay wide enough to nest
-    (0.58, 0.80),
-    (0.72, 0.86),
-    (0.90, 0.58),
-    (1.00, 0.20),
+    (0.00, 0.62),
+    (0.07, 0.84),
+    (0.26, 1.00),  # pear belly
+    (0.44, 0.90),
+    (0.50, 0.78),  # neck, still wide enough to nest
+    (0.57, 0.80),
+    (0.70, 0.86),  # round head
+    (0.88, 0.64),
+    (1.00, 0.30),  # scarf crown, not a pointed cap
 ]
 
 SPLIT_T = 0.48
@@ -234,9 +234,9 @@ def generate_doll(spec: DollSpec) -> Doll:
             r_in = r_out - wall
             # Widen only through the neck/shoulders so children fit, without
             # chewing through the scarf cap or the stand.
-            if 0.42 < t < 0.78:
-                r_in = max(r_in, rmax * 0.40)
-            r_in = min(r_in, r_out - 0.92)
+            if 0.38 < t < 0.82:
+                r_in = max(r_in, rmax * 0.46)
+            r_in = min(r_in, r_out - 0.82)
             if r_in < 0.65:
                 continue
             for x in range(w):
@@ -276,23 +276,28 @@ def paint_voxel(
     r = hypot2(dx, dz)
     r_out = profile_radius(t, rmax)
 
-    n_empty = sum(1 for q in neighbors6((x, y, z)) if q not in occupied)
-    innerish = r < r_out - 0.55 and n_empty > 0 and spec.hollow
+    # Only cavity-facing voxels (empty neighbor closer to the axis) are wood.
+    # The stand and crown stay painted so the doll does not show a birch floor.
+    innerish = False
+    if spec.hollow and 0 < y < h - 1 and r < r_out - 0.45:
+        for nx, ny, nz in neighbors6((x, y, z)):
+            if (nx, ny, nz) not in occupied and hypot2(nx - cx, nz - cz) < r - 0.15:
+                innerish = True
+                break
 
     on_split = spec.hollow and (y == split_y or y == split_y - 1)
-    if on_split and r < r_out - 0.4:
+    if on_split and r < r_out - 0.35:
         return WOOD_RIM
-    if innerish and abs(phi) > 0.9:
+    if innerish:
         return WOOD
-    if innerish and t < SPLIT_T and r < r_out - 0.8:
-        return WOOD
-    if innerish and t > SPLIT_T and r < r_out - 0.8:
-        return WOOD
+
+    if y == 0:
+        return spec.accent if r > r_out - 1.4 else spec.dress_d
 
     scale = h
-    face_open = abs(phi) < face_half_width(t, spec) and 0.56 < t < 0.88
+    face_open = abs(phi) < face_half_width(t, spec) and 0.54 < t < 0.88
 
-    if t >= 0.53:
+    if t >= 0.52:
         if face_open:
             return paint_face(spec, x, y, z, cx, cz, h, w)
         return paint_scarf(spec, phi, t, r, r_out, scale)
@@ -301,157 +306,128 @@ def paint_voxel(
 
 
 def face_half_width(t: float, spec: DollSpec) -> float:
-    # Oval scarf window. Kokoshnik is a bit narrower and taller.
-    u = (t - 0.56) / 0.32
+    """Wide oval scarf window so the face reads as a round matryoshka visage."""
+    u = (t - 0.54) / 0.34
     u = max(0.0, min(1.0, u))
-    oval = math.sin(u * math.pi)
-    base = 0.72 if spec.kokoshnik else 0.78
-    return base * (0.35 + 0.65 * oval)
+    oval = math.sin(u * math.pi) ** 0.85
+    return 0.95 * (0.42 + 0.58 * oval)
 
 
 def paint_face(spec: DollSpec, x: int, y: int, z: int, cx: float, cz: float, h: int, w: int) -> int:
-    """Paint facial features in voxel space so eyes stay round at every scale."""
-    fx = x - cx
-    y_eyes = 0.738 * (h - 1)
-    y_brows = y_eyes + (2.0 if h > 36 else 1.35 if h > 22 else 1.0)
-    y_nose = 0.698 * (h - 1)
-    y_mouth = 0.652 * (h - 1)
-    y_blush = 0.680 * (h - 1)
-    y_hair = 0.818 * (h - 1)
+    """Round Semenov-style face: big cheeks, small eyes, thin bangs, little hair."""
+    y0 = 0.55 * (h - 1)
+    y1 = 0.87 * (h - 1)
+    span = max(1.0, y1 - y0)
+    v = (y - y0) / span  # 0 chin … 1 forehead
+    u = (x - cx) / max(2.2, w * 0.20)  # -1 … 1 across the face
 
-    eye_sep = max(1.55, w * 0.095)
+    # Bangs only — a thin fringe, not a hair helmet.
+    if v > 0.91 and abs(u) < 0.75:
+        return HAIR
+    if v > 0.86 and 0.35 < abs(u) < 0.95:
+        return HAIR
+    # Tiny side locks at the scarf edge of the window
+    if abs(u) > 1.55 and v > 0.30:
+        return HAIR
+
+    eye_u, eye_v = 0.34, 0.58
     if h >= 40:
-        eye_r = 1.15
+        er_u, er_v = 0.16, 0.11
     elif h >= 26:
-        eye_r = 0.95
-    elif h >= 18:
-        eye_r = 0.72
+        er_u, er_v = 0.20, 0.13
+    elif h >= 16:
+        er_u, er_v = 0.24, 0.16
     else:
-        eye_r = 0.55
+        er_u, er_v = 0.30, 0.20
 
     for sign in (-1.0, 1.0):
-        ex = cx + sign * eye_sep
-        dx = x - ex
-        dy = y - y_eyes
-        dist2 = dx * dx + dy * dy
-        if dist2 <= eye_r * eye_r:
-            if dx * sign <= 0 and dy >= 0.15 and dist2 <= (eye_r * 0.42) ** 2:
+        du = (u - sign * eye_u) / er_u
+        dv = (v - eye_v) / er_v
+        if du * du + dv * dv <= 1.0:
+            if du * sign < -0.15 and dv < -0.1:
                 return WHITE
             return HAIR
-        if h > 20:
-            bx = x - ex
-            by = y - y_brows
-            if abs(bx) <= eye_r + 0.7 and abs(by) <= 0.62:
-                return HAIR_M
+        # thin brows
+        if h > 18 and abs(u - sign * eye_u) < er_u * 1.15 and abs(v - (eye_v + 0.14)) < 0.045:
+            return HAIR_M
 
-    if abs(fx) <= (0.7 if h > 20 else 0.45) and abs(y - y_nose) <= (0.7 if h > 20 else 0.45):
+    # Nose
+    if abs(u) < 0.10 and abs(v - 0.42) < 0.06:
         return SKIN_D
 
-    mouth_w = max(1.35, w * 0.10)
-    smile_y = y_mouth + (0.055 if h > 30 else 0.04) * (fx * fx)
-    if abs(fx) <= mouth_w and abs(y - smile_y) <= (0.72 if h > 22 else 0.5):
+    # Smile — corners up
+    mouth_v = 0.26 + 0.10 * (u * u)
+    if abs(u) < 0.38 and abs(v - mouth_v) < (0.055 if h > 20 else 0.08):
         return LIPS
 
-    blush_x = max(2.2, w * 0.155)
-    blush_r = max(1.15, w * 0.068)
+    # Blush circles
     for sign in (-1.0, 1.0):
-        dx = x - (cx + sign * blush_x)
-        dy = (y - y_blush) * 1.35
-        if dx * dx + dy * dy <= blush_r * blush_r:
+        du = (u - sign * 0.52) / 0.28
+        dv = (v - 0.36) / 0.16
+        if du * du + dv * dv <= 1.0:
             return BLUSH
 
-    if y >= y_hair:
-        return HAIR
-    if y >= y_hair - (1.4 if h > 24 else 0.9) and abs(fx) > w * 0.07:
-        return HAIR
-    if abs(fx) > w * 0.17 and y > 0.62 * (h - 1):
-        return HAIR
-
-    if y > 0.77 * (h - 1):
+    if v > 0.72:
         return SKIN_L
-    if abs(fx) > w * 0.15:
+    if abs(u) > 0.72:
         return SKIN_D
     return SKIN
 
 
 def paint_scarf(spec: DollSpec, phi: float, t: float, r: float, r_out: float, scale: float) -> int:
-    # Gold edge around the face window
     hw = face_half_width(t, spec)
-    near_face = 0.54 < t < 0.90 and abs(abs(phi) - hw) < 0.10
-    if near_face and abs(phi) >= hw * 0.92:
+
+    # Gold rim around the face opening
+    if 0.54 < t < 0.90 and abs(abs(phi) - hw) < 0.11 and abs(phi) >= hw * 0.72:
         return spec.accent
 
-    # Kokoshnik crest: gold band + jewels
-    if spec.kokoshnik and t > 0.90:
-        if t > 0.96:
-            return GOLD_L
-        # jewel dots
-        jewels = (-0.6, -0.3, 0.0, 0.3, 0.6)
-        for j in jewels:
-            if abs(phi - j) < 0.08 and abs(t - 0.935) < 0.02:
-                return GOLD
-        return spec.scarf_d
+    # Crown stays in the scarf color with a gold band, not a pale cap
+    if t > 0.90:
+        if 0.935 < t < 0.97:
+            return spec.accent
+        return spec.scarf
 
-    # Forehead band
-    if 0.84 < t < 0.89 and abs(phi) > hw * 0.85:
+    # Forehead band above the face
+    if 0.86 < t < 0.91:
         return spec.accent
 
-    # Scarf flower, off-center top-right
     if scale > 18:
-        col = stamp_rose(phi - 0.95, t - 0.78, 0.16 if scale > 30 else 0.20, spec)
+        col = stamp_rose(phi - 1.05, t - 0.76, 0.14 if scale > 30 else 0.18, spec)
         if col is not None:
             return col
 
-    # Polka / berry dots on scarf
     if scale > 16:
-        gx = math.sin(phi * 5.0 + t * 18.0)
-        gy = math.cos(phi * 7.0 - t * 14.0)
-        if gx > 0.72 and gy > 0.35 and 0.60 < t < 0.92 and abs(phi) > hw + 0.05:
-            return spec.flower if (int((phi + 3) * 8) + int(t * 20)) % 3 else spec.accent
+        gx = math.sin(phi * 4.0 + t * 14.0)
+        gy = math.cos(phi * 6.0 - t * 11.0)
+        if gx > 0.78 and gy > 0.4 and 0.62 < t < 0.90 and abs(phi) > hw + 0.12:
+            return spec.flower if int((phi + 3) * 7 + t * 18) % 2 == 0 else spec.accent
 
-    # Side ties / drape darker
-    if t < 0.62 and abs(abs(phi) - 1.15) < 0.35:
+    if t < 0.60:
         return spec.scarf_d
-
-    # Hem highlight
-    if t < 0.58:
+    if r > r_out - 0.7 and phi > 0.5:
         return spec.scarf_d
-
-    # Lighting
-    if r > r_out - 0.7 and phi > 0.4:
-        return spec.scarf_d
-    if phi < -0.3 and t > 0.7:
+    if phi < -0.4 and t > 0.7:
         return spec.scarf_l
     return spec.scarf
 
 
 def stamp_rose(u: float, v: float, radius: float, spec: DollSpec) -> int | None:
-    rr = math.hypot(u, v * 1.15)
+    rr = math.hypot(u, v * 1.05)
     if rr > radius:
         return None
     ang = math.atan2(v, u)
-    petal = radius * (0.72 + 0.28 * math.sin(ang * 5.0))
-    if rr < radius * 0.22:
+    petal = radius * (0.62 + 0.38 * (0.5 + 0.5 * math.cos(ang * 5.0)))
+    if rr < radius * 0.26:
         return spec.flower_c
     if rr < petal:
-        # inner shading
-        if rr < radius * 0.45:
-            return spec.flower
-        return spec.flower_l
-    # tiny leaves
-    if rr < radius * 1.05 and abs(math.cos(ang * 2.5)) > 0.85:
-        return LEAF
+        return spec.flower if rr < radius * 0.62 else spec.flower_l
     return None
 
 
 def stamp_leaf(u: float, v: float, radius: float) -> int | None:
-    # Leaf pointed along +v
-    if abs(u) > radius * 0.45:
+    if v < -radius * 0.15 or v > radius:
         return None
-    if v < -radius * 0.2 or v > radius:
-        return None
-    # taper
-    width = radius * 0.45 * (1.0 - abs(v / radius))
+    width = radius * 0.42 * max(0.0, 1.0 - abs(v / radius))
     if abs(u) < width * 0.35:
         return LEAF_D
     if abs(u) < width:
@@ -511,45 +487,30 @@ def paint_body(spec: DollSpec, phi: float, t: float, scale: float) -> int:
 
 
 def bouquet(phi: float, t: float, scale: float, spec: DollSpec) -> int | None:
-    s = 1.0 if scale > 30 else 1.25 if scale > 20 else 1.55
+    s = 1.0 if scale > 30 else 1.2 if scale > 20 else 1.45
     roses = [
-        (0.00, 0.34, 0.13 * s),
-        (-0.22, 0.27, 0.10 * s),
-        (0.20, 0.28, 0.10 * s),
+        (0.00, 0.33, 0.12 * s),
+        (-0.20, 0.26, 0.09 * s),
+        (0.20, 0.26, 0.09 * s),
     ]
-    if scale > 36:
-        roses.append((0.02, 0.22, 0.08 * s))
     for ru, rv, rr in roses:
         col = stamp_rose(phi - ru, t - rv, rr, spec)
         if col is not None:
             return col
 
-    # Leaves
     leaves = [
-        (-0.34, 0.24, 0.12, 0.6),
-        (0.32, 0.23, 0.12, -0.5),
-        (-0.08, 0.18, 0.10, 0.2),
-        (0.12, 0.18, 0.10, -0.2),
+        (-0.32, 0.24, 0.11, 0.7),
+        (0.32, 0.24, 0.11, -0.7),
+        (0.00, 0.18, 0.09, 0.0),
     ]
     for lu, lv, lr, rot in leaves:
-        u = phi - lu
-        v = t - lv
-        # rotate
+        u, v = phi - lu, t - lv
         c, s_ = math.cos(rot), math.sin(rot)
-        uu = u * c - v * s_
-        vv = u * s_ + v * c
-        col = stamp_leaf(uu, vv, lr * s)
+        col = stamp_leaf(u * c - v * s_, u * s_ + v * c, lr * s)
         if col is not None:
             return col
 
-    # Berries / gold dots
-    dots = [(-0.12, 0.31), (0.14, 0.32), (-0.05, 0.21), (0.08, 0.21)]
-    for du, dv in dots:
-        if math.hypot(phi - du, (t - dv) * 1.4) < 0.035 * s:
-            return BERRY if spec.flower != BERRY else GOLD
-
-    # Stems
-    if abs(phi) < 0.04 and 0.12 < t < 0.22:
+    if abs(phi) < 0.035 and 0.12 < t < 0.20:
         return LEAF_D
     return None
 

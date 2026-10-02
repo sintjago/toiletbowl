@@ -136,6 +136,12 @@ button.ghost {
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
 }
 
+button#btn-unpack {
+  padding: 12px 22px;
+  background: linear-gradient(#d4a017, #9b242c);
+  font-size: 1.02rem;
+}
+
 .status {
   margin-left: 6px;
   font-size: 0.95rem;

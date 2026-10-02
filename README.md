@@ -26,11 +26,12 @@ Then open [http://localhost:8000](http://localhost:8000).
 
 ![Open the lid to take out the inner doll](previews/viewer-open.png)
 
+- **Unpack set** — opens each lid in turn and takes the inner doll out until all five stand in a row
 - **Click** a closed doll to lift her lid
 - **Click** the doll inside to take her out
-- **Drag** a doll on the table; drop her onto an open parent to nest her again
-- **Open lid** / **Take out** / **Line up** / **Nest all**
-- Keys: `O` open, `T` take out, `L` line up, `N` nest all, `1`–`5` select
+- **Drag** a doll onto an open parent to nest her again
+- **Line up** / **Nest all**
+- Keys: `U` unpack, `O` open, `T` take out, `L` line up, `N` nest all, `1`–`5` select
 
 ## MagicaVoxel
 
