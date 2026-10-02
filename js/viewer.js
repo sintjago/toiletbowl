@@ -19,7 +19,7 @@ scene.background = new THREE.Color(0x1a0b0c);
 scene.fog = new THREE.Fog(0x1a0b0c, 110, 240);
 
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 500);
-camera.position.set(18, 38, 96);
+camera.position.set(22, 42, 118);
 
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
@@ -248,7 +248,7 @@ function frameVisible() {
   });
   const cx = (minx + maxx) / 2;
   const span = Math.max(40, maxx - minx + 24);
-  const dist = Math.max(88, span * 1.15 + maxh * 0.35);
+  const dist = Math.max(115, span * 1.2 + maxh * 0.7);
   targetGoal.set(cx, maxh * 0.45, 0);
   camGoal.set(cx + dist * 0.16, Math.max(32, maxh * 0.55 + 10), dist);
   autoCam = true;
