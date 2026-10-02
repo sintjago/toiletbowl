@@ -24,7 +24,11 @@ python3 -m http.server 8000
 
 Then open [http://localhost:8000](http://localhost:8000).
 
-![Open the lid to take out the inner doll](previews/viewer-open.png)
+![Lid open, inner doll peeking out](previews/viewer-peek.png)
+
+![Take the inner doll out](previews/viewer-open.png)
+
+![Unpack the whole set](previews/viewer-lineup.png)
 
 - **Unpack set** — opens each lid in turn and takes the inner doll out until all five stand in a row
 - **Click** a closed doll to lift her lid

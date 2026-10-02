@@ -117,33 +117,34 @@ class DollSpec:
     flower_c: int
     accent: int
     kokoshnik: bool = False
+    motif: str = "rose"
 
 
 SPECS = [
     DollSpec(
         "Matryona", "Матрёна", 37, 55, 2, True,
         SCARLET, SCARLET_D, ROSE_L, SCARLET, SCARLET_D, CREAM,
-        ROSE, ROSE_L, GOLD, GOLD, kokoshnik=True,
+        ROSE, ROSE_L, GOLD, GOLD, kokoshnik=True, motif="rose",
     ),
     DollSpec(
         "Darya", "Дарья", 27, 41, 2, True,
         BLUE, BLUE_D, BLUE_L, BLUE, BLUE_D, LINEN,
-        ROSE, PINK_L, GOLD, GOLD,
+        ROSE, PINK_L, GOLD, GOLD, motif="frost",
     ),
     DollSpec(
         "Olga", "Ольга", 19, 29, 1, True,
         GREEN_M, LEAF_D, GREEN_L, GREEN_M, LEAF_D, CREAM,
-        YELLOW, YELLOW_L, ORANGE, GOLD,
+        YELLOW, YELLOW_L, ORANGE, GOLD, motif="sunflower",
     ),
     DollSpec(
         "Natasha", "Наташа", 13, 21, 1, True,
         YELLOW, YELLOW_D, YELLOW_L, YELLOW_D, BROWN, LINEN,
-        RASP, PINK_L, GOLD, SCARLET,
+        RASP, PINK_L, GOLD, SCARLET, motif="berry",
     ),
     DollSpec(
         "Masha", "Маша", 9, 15, 0, False,
         PINK, RASP_D, PINK_L, RASP, RASP_D, PINK_L,
-        ROSE, ROSE_L, GOLD, GOLD,
+        ROSE, ROSE_L, GOLD, GOLD, motif="bloom",
     ),
 ]
 
@@ -344,10 +345,11 @@ def paint_face(spec: DollSpec, x: int, y: int, z: int, cx: float, cz: float, h: 
         du = (u - sign * eye_u) / er_u
         dv = (v - eye_v) / er_v
         if du * du + dv * dv <= 1.0:
-            if du * sign < -0.15 and dv < -0.1:
+            if h < 18:
+                return HAIR
+            if du * sign < -0.12 and dv < -0.05:
                 return WHITE
             return HAIR
-        # thin brows
         if h > 18 and abs(u - sign * eye_u) < er_u * 1.15 and abs(v - (eye_v + 0.14)) < 0.045:
             return HAIR_M
 
@@ -392,7 +394,12 @@ def paint_scarf(spec: DollSpec, phi: float, t: float, r: float, r_out: float, sc
         return spec.accent
 
     if scale > 18:
-        col = stamp_rose(phi - 1.05, t - 0.76, 0.14 if scale > 30 else 0.18, spec)
+        if spec.motif == "frost":
+            col = stamp_snow(phi - 1.05, t - 0.76, 0.16)
+        elif spec.motif == "sunflower":
+            col = stamp_sunflower(phi - 1.0, t - 0.76, 0.15)
+        else:
+            col = stamp_rose(phi - 1.05, t - 0.76, 0.14 if scale > 30 else 0.18, spec)
         if col is not None:
             return col
 
@@ -409,6 +416,41 @@ def paint_scarf(spec: DollSpec, phi: float, t: float, r: float, r_out: float, sc
     if phi < -0.4 and t > 0.7:
         return spec.scarf_l
     return spec.scarf
+
+
+def stamp_snow(u: float, v: float, radius: float) -> int | None:
+    rr = math.hypot(u, v)
+    if rr > radius:
+        return None
+    if rr < radius * 0.18:
+        return WHITE
+    ang = abs(math.atan2(v, u))
+    arm = min(ang % (math.pi / 3), math.pi / 3 - (ang % (math.pi / 3)))
+    if arm < 0.18 and rr < radius * 0.92:
+        return GOLD_L if rr > radius * 0.55 else WHITE
+    return None
+
+
+def stamp_sunflower(u: float, v: float, radius: float) -> int | None:
+    rr = math.hypot(u, v)
+    if rr > radius:
+        return None
+    if rr < radius * 0.32:
+        return BROWN
+    ang = math.atan2(v, u)
+    petal = radius * (0.7 + 0.3 * (0.5 + 0.5 * math.cos(ang * 8.0)))
+    if rr < petal:
+        return YELLOW_L if rr > radius * 0.7 else YELLOW
+    return None
+
+
+def stamp_berry(u: float, v: float, radius: float) -> int | None:
+    for dx, dy in ((0.0, 0.02), (-0.45, -0.15), (0.42, -0.12)):
+        if math.hypot(u - dx * radius, v - dy * radius) < radius * 0.38:
+            return BERRY
+    if math.hypot(u, v + radius * 0.35) < radius * 0.28:
+        return LEAF
+    return None
 
 
 def stamp_rose(u: float, v: float, radius: float, spec: DollSpec) -> int | None:
@@ -488,30 +530,54 @@ def paint_body(spec: DollSpec, phi: float, t: float, scale: float) -> int:
 
 def bouquet(phi: float, t: float, scale: float, spec: DollSpec) -> int | None:
     s = 1.0 if scale > 30 else 1.2 if scale > 20 else 1.45
-    roses = [
-        (0.00, 0.33, 0.12 * s),
-        (-0.20, 0.26, 0.09 * s),
-        (0.20, 0.26, 0.09 * s),
-    ]
-    for ru, rv, rr in roses:
-        col = stamp_rose(phi - ru, t - rv, rr, spec)
-        if col is not None:
+    motif = spec.motif
+    if motif == "frost":
+        col = stamp_snow(phi, t - 0.32, 0.13 * s)
+        if col:
             return col
-
-    leaves = [
-        (-0.32, 0.24, 0.11, 0.7),
-        (0.32, 0.24, 0.11, -0.7),
-        (0.00, 0.18, 0.09, 0.0),
-    ]
-    for lu, lv, lr, rot in leaves:
-        u, v = phi - lu, t - lv
-        c, s_ = math.cos(rot), math.sin(rot)
-        col = stamp_leaf(u * c - v * s_, u * s_ + v * c, lr * s)
-        if col is not None:
+        col = stamp_berry(phi + 0.22, t - 0.24, 0.08 * s)
+        if col:
             return col
-
-    if abs(phi) < 0.035 and 0.12 < t < 0.20:
-        return LEAF_D
+        col = stamp_berry(phi - 0.22, t - 0.24, 0.08 * s)
+        if col:
+            return col
+    elif motif == "sunflower":
+        col = stamp_sunflower(phi, t - 0.31, 0.14 * s)
+        if col:
+            return col
+        col = stamp_leaf(phi + 0.28, t - 0.22, 0.11 * s)
+        if col:
+            return col
+        col = stamp_leaf(-(phi + 0.28), t - 0.22, 0.11 * s)
+        if col:
+            return col
+    elif motif == "berry":
+        return stamp_berry(phi, t - 0.28, 0.16 * s)
+    elif motif == "bloom":
+        return stamp_rose(phi, t - 0.30, 0.14 * s, spec)
+    else:
+        roses = [
+            (0.00, 0.33, 0.12 * s),
+            (-0.20, 0.26, 0.09 * s),
+            (0.20, 0.26, 0.09 * s),
+        ]
+        for ru, rv, rr in roses:
+            col = stamp_rose(phi - ru, t - rv, rr, spec)
+            if col is not None:
+                return col
+        leaves = [
+            (-0.32, 0.24, 0.11, 0.7),
+            (0.32, 0.24, 0.11, -0.7),
+            (0.00, 0.18, 0.09, 0.0),
+        ]
+        for lu, lv, lr, rot in leaves:
+            u, v = phi - lu, t - lv
+            c, s_ = math.cos(rot), math.sin(rot)
+            col = stamp_leaf(u * c - v * s_, u * s_ + v * c, lr * s)
+            if col is not None:
+                return col
+        if abs(phi) < 0.035 and 0.12 < t < 0.20:
+            return LEAF_D
     return None
 
 

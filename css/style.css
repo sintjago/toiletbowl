@@ -189,13 +189,21 @@ button#btn-unpack {
   margin-right: 8px;
 }
 
+.vignette {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse at 50% 42%, transparent 38%, rgba(8, 2, 2, 0.55) 100%);
+}
+
 .loading {
   position: fixed;
   inset: 0;
   z-index: 10;
   display: grid;
   place-items: center;
-  background: #1a0b0c;
+  background: #14080a;
   color: var(--gold-soft);
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 2rem;
