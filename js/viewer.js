@@ -15,43 +15,87 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.28;
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x14080a);
-scene.fog = new THREE.FogExp2(0x14080a, 0.0065);
+const HOME_CAM = new THREE.Vector3(56, 74, 238);
+const HOME_TARGET = new THREE.Vector3(0, 14, 0);
 
-const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 500);
-camera.position.set(48, 72, 168);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x12070a);
+scene.fog = new THREE.FogExp2(0x12070a, 0.00215);
+
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.4, 900);
+camera.position.copy(HOME_CAM);
+camera.lookAt(HOME_TARGET);
 
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
-controls.target.set(0, 24, 0);
-controls.maxPolarAngle = Math.PI * 0.48;
-controls.minDistance = 36;
-controls.maxDistance = 260;
+controls.target.copy(HOME_TARGET);
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.minDistance = 110;
+controls.maxDistance = 420;
 
-scene.add(new THREE.HemisphereLight(0xffe6c4, 0x2a1010, 0.55));
-const key = new THREE.DirectionalLight(0xfff1d6, 1.05);
-key.position.set(32, 58, 40);
+scene.add(new THREE.HemisphereLight(0xffe6c4, 0x2a1010, 0.62));
+const key = new THREE.DirectionalLight(0xfff1d6, 0.92);
+key.position.set(40, 70, 48);
 scene.add(key);
-scene.add(new THREE.DirectionalLight(0x6a80c0, 0.18)).position.set(-50, 16, -28);
-scene.add(new THREE.DirectionalLight(0xfff6e4, 0.62)).position.set(6, 22, 70);
+const fill = new THREE.DirectionalLight(0x6a80c0, 0.22);
+fill.position.set(-70, 24, -36);
+scene.add(fill);
+const rim = new THREE.DirectionalLight(0xfff6e4, 0.48);
+rim.position.set(8, 28, 90);
+scene.add(rim);
+const bounce = new THREE.PointLight(0xff7a40, 0.28, 120, 2);
+bounce.position.set(0, 6, 10);
+scene.add(bounce);
 
-const lamp = new THREE.PointLight(0xffc878, 1.85, 170, 1.5);
-lamp.position.set(-10, 62, 18);
-scene.add(lamp);
+const lampRig = new THREE.Group();
+lampRig.position.set(-8, 109, 14);
+scene.add(lampRig);
+const canopy = new THREE.Mesh(
+  new THREE.CylinderGeometry(4.2, 3.2, 2.4, 16),
+  new THREE.MeshStandardMaterial({ color: 0xc4a060, metalness: 0.72, roughness: 0.28 })
+);
+lampRig.add(canopy);
+const chain = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.18, 0.18, 22, 8),
+  new THREE.MeshStandardMaterial({ color: 0xc4a060, metalness: 0.65, roughness: 0.32 })
+);
+chain.position.y = -12;
+lampRig.add(chain);
+const shade = new THREE.Mesh(
+  new THREE.CylinderGeometry(3.4, 15, 13, 24, 1, true),
+  new THREE.MeshStandardMaterial({
+    color: 0x8e1c24,
+    emissive: 0x5a1808,
+    emissiveIntensity: 0.42,
+    roughness: 0.55,
+    side: THREE.DoubleSide,
+  })
+);
+shade.position.y = -24;
+lampRig.add(shade);
+const shadeTrim = new THREE.Mesh(
+  new THREE.TorusGeometry(15, 0.35, 6, 28),
+  new THREE.MeshStandardMaterial({ color: 0xe4b23c, metalness: 0.7, roughness: 0.3 })
+);
+shadeTrim.position.y = -30.4;
+shadeTrim.rotation.x = Math.PI / 2;
+lampRig.add(shadeTrim);
+const lamp = new THREE.PointLight(0xffc878, 2.05, 240, 1.35);
+lamp.position.y = -26;
+lampRig.add(lamp);
 const bulb = new THREE.Mesh(
-  new THREE.SphereGeometry(1.8, 16, 16),
+  new THREE.SphereGeometry(2.1, 16, 16),
   new THREE.MeshBasicMaterial({ color: 0xffe29a })
 );
-bulb.position.copy(lamp.position);
-scene.add(bulb);
+bulb.position.y = -26;
+lampRig.add(bulb);
 const halo = new THREE.Mesh(
-  new THREE.SphereGeometry(5.5, 16, 16),
+  new THREE.SphereGeometry(7.2, 16, 16),
   new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.12, depthWrite: false })
 );
-halo.position.copy(lamp.position);
-scene.add(halo);
+halo.position.y = -26;
+lampRig.add(halo);
 
 function woodTexture() {
   const c = document.createElement("canvas");
@@ -81,26 +125,35 @@ function khokhlomaTexture() {
   c.width = 1024;
   c.height = 1024;
   const g = c.getContext("2d");
-  g.fillStyle = "#6b1218";
+  g.fillStyle = "#7a141c";
   g.fillRect(0, 0, 1024, 1024);
-  g.strokeStyle = "#e4b23c";
-  g.lineWidth = 18;
+  g.strokeStyle = "#f3d48a";
+  g.lineWidth = 22;
   g.beginPath();
   g.arc(512, 512, 470, 0, Math.PI * 2);
   g.stroke();
-  g.lineWidth = 6;
+  g.strokeStyle = "#e4b23c";
+  g.lineWidth = 8;
   g.beginPath();
-  g.arc(512, 512, 440, 0, Math.PI * 2);
+  g.arc(512, 512, 438, 0, Math.PI * 2);
   g.stroke();
-  for (let i = 0; i < 18; i++) {
-    const a0 = (i / 18) * Math.PI * 2;
-    g.strokeStyle = i % 2 ? "#f3d48a" : "#e4b23c";
-    g.lineWidth = 3;
+  g.fillStyle = "#e4b23c";
+  g.beginPath();
+  g.arc(512, 512, 56, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = "#7a141c";
+  g.beginPath();
+  g.arc(512, 512, 28, 0, Math.PI * 2);
+  g.fill();
+  for (let i = 0; i < 20; i++) {
+    const a0 = (i / 20) * Math.PI * 2;
+    g.strokeStyle = i % 2 ? "#ffe08a" : "#e4b23c";
+    g.lineWidth = 4;
     g.beginPath();
     for (let k = 0; k <= 24; k++) {
       const t = k / 24;
       const a = a0 + t * 1.4;
-      const r = 120 + t * 280 + Math.sin(t * 10) * 18;
+      const r = 110 + t * 290 + Math.sin(t * 10) * 20;
       const x = 512 + Math.cos(a) * r;
       const y = 512 + Math.sin(a) * r;
       if (k === 0) g.moveTo(x, y);
@@ -108,14 +161,14 @@ function khokhlomaTexture() {
     }
     g.stroke();
   }
-  for (let i = 0; i < 48; i++) {
+  for (let i = 0; i < 80; i++) {
     const a = Math.random() * Math.PI * 2;
-    const r = 80 + Math.random() * 340;
+    const r = 70 + Math.random() * 360;
     const x = 512 + Math.cos(a) * r;
     const y = 512 + Math.sin(a) * r;
-    g.fillStyle = Math.random() > 0.35 ? "#c62828" : "#2e7d32";
+    g.fillStyle = Math.random() > 0.4 ? "#e53935" : "#43a047";
     g.beginPath();
-    g.arc(x, y, 4 + Math.random() * 7, 0, Math.PI * 2);
+    g.arc(x, y, 6 + Math.random() * 8, 0, Math.PI * 2);
     g.fill();
   }
   const tex = new THREE.CanvasTexture(c);
@@ -123,15 +176,147 @@ function khokhlomaTexture() {
   return tex;
 }
 
-const table = new THREE.Mesh(
-  new THREE.CylinderGeometry(70, 74, 4.4, 64),
-  new THREE.MeshStandardMaterial({ map: woodTexture(), roughness: 0.72, metalness: 0.04 })
-);
-table.position.y = -2.2;
+function wallpaperTexture() {
+  const c = document.createElement("canvas");
+  c.width = 1024;
+  c.height = 512;
+  const g = c.getContext("2d");
+  g.fillStyle = "#2c1014";
+  g.fillRect(0, 0, 1024, 512);
+  for (let i = 0; i < 8; i++) {
+    const x = i * 128;
+    g.fillStyle = i % 2 ? "#3a1418" : "#281014";
+    g.fillRect(x, 0, 128, 512);
+    g.strokeStyle = "rgba(196,160,96,0.55)";
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(x + 3, 0);
+    g.lineTo(x + 3, 512);
+    g.stroke();
+    g.strokeStyle = "rgba(228,178,60,0.45)";
+    g.lineWidth = 1.4;
+    for (let y = 36; y < 500; y += 88) {
+      g.beginPath();
+      g.moveTo(x + 64, y);
+      g.lineTo(x + 86, y + 22);
+      g.lineTo(x + 64, y + 44);
+      g.lineTo(x + 42, y + 22);
+      g.closePath();
+      g.stroke();
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(3, 1);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const woodMat = new THREE.MeshStandardMaterial({ map: woodTexture(), roughness: 0.72, metalness: 0.04 });
+const table = new THREE.Mesh(new THREE.CylinderGeometry(78, 82, 5.2, 64), woodMat);
+table.position.y = -2.6;
 scene.add(table);
 
+const tableRim = new THREE.Mesh(
+  new THREE.TorusGeometry(80, 0.7, 8, 64),
+  new THREE.MeshStandardMaterial({ color: 0xe4b23c, metalness: 0.72, roughness: 0.28 })
+);
+tableRim.rotation.x = Math.PI / 2;
+tableRim.position.y = 0.04;
+scene.add(tableRim);
+
+const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(16, 22, 10, 24), woodMat);
+pedestal.position.y = -10.2;
+scene.add(pedestal);
+const plinth = new THREE.Mesh(new THREE.CylinderGeometry(26, 28, 3.2, 24), woodMat);
+plinth.position.y = -13.8;
+scene.add(plinth);
+for (let i = 0; i < 4; i++) {
+  const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+  const leg = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 4.4, 13.6, 10), woodMat);
+  leg.position.set(Math.cos(a) * 54, -10.4, Math.sin(a) * 54);
+  scene.add(leg);
+}
+
+const floorTex = woodTexture();
+floorTex.repeat.set(10, 10);
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(248, 80),
+  new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.92, metalness: 0.02, color: 0x5a3824 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -15.4;
+scene.add(floor);
+
+const room = new THREE.Mesh(
+  new THREE.CylinderGeometry(236, 236, 128, 48, 1, true),
+  new THREE.MeshStandardMaterial({ map: wallpaperTexture(), roughness: 0.92, side: THREE.BackSide })
+);
+room.position.y = 48;
+scene.add(room);
+
+const ceiling = new THREE.Mesh(
+  new THREE.CircleGeometry(238, 48),
+  new THREE.MeshStandardMaterial({ color: 0x241210, roughness: 1 })
+);
+ceiling.rotation.x = Math.PI / 2;
+ceiling.position.y = 112;
+scene.add(ceiling);
+
+const winLight = new THREE.PointLight(0x88a6e0, 0.55, 180, 1.6);
+winLight.position.set(18, 42, -170);
+scene.add(winLight);
+const windowPane = new THREE.Mesh(
+  new THREE.PlaneGeometry(52, 40),
+  new THREE.MeshBasicMaterial({ color: 0x7a96cc, transparent: true, opacity: 0.78 })
+);
+windowPane.position.set(8, 44, -232);
+scene.add(windowPane);
+const windowFrame = new THREE.Mesh(
+  new THREE.PlaneGeometry(58, 46),
+  new THREE.MeshStandardMaterial({ color: 0x5a3218, roughness: 0.7 })
+);
+windowFrame.position.set(8, 44, -233.2);
+scene.add(windowFrame);
+const mullionV = new THREE.Mesh(
+  new THREE.BoxGeometry(1.6, 40, 1.2),
+  new THREE.MeshStandardMaterial({ color: 0xc4a060, metalness: 0.35, roughness: 0.45 })
+);
+mullionV.position.set(8, 44, -231.4);
+scene.add(mullionV);
+const mullionH = new THREE.Mesh(
+  new THREE.BoxGeometry(52, 1.6, 1.2),
+  new THREE.MeshStandardMaterial({ color: 0xc4a060, metalness: 0.35, roughness: 0.45 })
+);
+mullionH.position.set(8, 44, -231.4);
+scene.add(mullionH);
+for (const side of [-1, 1]) {
+  const curtain = new THREE.Mesh(
+    new THREE.PlaneGeometry(16, 58),
+    new THREE.MeshStandardMaterial({ color: 0x6b151c, roughness: 0.85, side: THREE.DoubleSide })
+  );
+  curtain.position.set(8 + side * 30, 38, -230);
+  scene.add(curtain);
+}
+
+const icon = new THREE.Mesh(
+  new THREE.PlaneGeometry(18, 24),
+  new THREE.MeshStandardMaterial({ color: 0x3a1810, roughness: 0.55, metalness: 0.12 })
+);
+icon.position.set(-70, 40, -220);
+icon.rotation.y = 0.18;
+scene.add(icon);
+const iconGold = new THREE.Mesh(
+  new THREE.PlaneGeometry(14, 18),
+  new THREE.MeshStandardMaterial({ color: 0xe4b23c, emissive: 0x4a3008, emissiveIntensity: 0.2, roughness: 0.4 })
+);
+iconGold.position.set(-70, 40, -219.6);
+iconGold.rotation.y = 0.18;
+scene.add(iconGold);
+
 const cloth = new THREE.Mesh(
-  new THREE.CircleGeometry(46, 72),
+  new THREE.CircleGeometry(54, 72),
   new THREE.MeshStandardMaterial({ map: khokhlomaTexture(), roughness: 0.78, metalness: 0.08 })
 );
 cloth.rotation.x = -Math.PI / 2;
@@ -139,12 +324,12 @@ cloth.position.y = 0.08;
 scene.add(cloth);
 
 const dustGeo = new THREE.BufferGeometry();
-const dustN = 420;
+const dustN = 560;
 const dustPos = new Float32Array(dustN * 3);
 for (let i = 0; i < dustN; i++) {
-  dustPos[i * 3] = (Math.random() - 0.5) * 90;
-  dustPos[i * 3 + 1] = Math.random() * 70;
-  dustPos[i * 3 + 2] = (Math.random() - 0.5) * 90;
+  dustPos[i * 3] = (Math.random() - 0.5) * 160;
+  dustPos[i * 3 + 1] = Math.random() * 100;
+  dustPos[i * 3 + 2] = (Math.random() - 0.5) * 160;
 }
 dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
 const dust = new THREE.Points(
@@ -165,8 +350,8 @@ const pointer = new THREE.Vector2();
 const dummy = new THREE.Object3D();
 const tmpColor = new THREE.Color();
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-const camGoal = new THREE.Vector3(24, 44, 132);
-const targetGoal = new THREE.Vector3(0, 24, 0);
+const camGoal = HOME_CAM.clone();
+const targetGoal = HOME_TARGET.clone();
 
 let data = null;
 let actors = [];
@@ -175,7 +360,7 @@ let dragging = null;
 let dragOffset = new THREE.Vector3();
 let pointerDown = null;
 let busy = false;
-let autoCam = true;
+let autoCam = false;
 let muted = false;
 const clock = new THREE.Clock();
 const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -380,8 +565,8 @@ function setStatus() {
 }
 
 function frameHome() {
-  targetGoal.set(0, 24, 0);
-  camGoal.set(24, 44, 132);
+  targetGoal.copy(HOME_TARGET);
+  camGoal.copy(HOME_CAM);
   autoCam = true;
 }
 
@@ -395,10 +580,10 @@ function frameVisible() {
     maxh = Math.max(maxh, a.h);
   });
   const cx = (minx + maxx) / 2;
-  const span = Math.max(40, maxx - minx + 24);
-  const dist = Math.max(132, span * 1.22 + maxh * 0.75);
-  targetGoal.set(cx, maxh * 0.45, 0);
-  camGoal.set(cx + dist * 0.14, Math.max(34, maxh * 0.58 + 12), dist);
+  const span = Math.max(40, maxx - minx + 28);
+  const dist = Math.max(220, span * 1.42 + maxh * 1.05);
+  targetGoal.set(cx, Math.max(12, maxh * 0.32), 0);
+  camGoal.set(cx + dist * 0.2, Math.max(58, maxh * 0.72 + 28), dist);
   autoCam = true;
 }
 
@@ -711,6 +896,7 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "l" || e.key === "L") lineUp();
   if (e.key === "u" || e.key === "U") unpackAll();
   if (e.key === "m" || e.key === "M") toggleMute();
+  if (e.key === "h" || e.key === "H") frameHome();
   if (e.key >= "1" && e.key <= "5") {
     selected = Number(e.key) - 1;
     setStatus();
@@ -774,11 +960,13 @@ function updateActors(dt) {
   const dp = dust.geometry.attributes.position.array;
   for (let i = 0; i < dustN; i++) {
     dp[i * 3 + 1] += dt * (0.6 + (i % 5) * 0.12);
-    if (dp[i * 3 + 1] > 72) dp[i * 3 + 1] = 0;
+    if (dp[i * 3 + 1] > 104) dp[i * 3 + 1] = 0;
     dp[i * 3] += Math.sin(t * 0.2 + i) * dt * 0.4;
   }
   dust.geometry.attributes.position.needsUpdate = true;
   halo.material.opacity = 0.1 + Math.sin(t * 1.6) * 0.04;
+  lampRig.rotation.z = Math.sin(t * 0.48) * 0.028;
+  lampRig.rotation.x = Math.sin(t * 0.33) * 0.012;
   if (autoCam) {
     const ck = 1 - Math.exp(-dt * 1.8);
     camera.position.lerp(camGoal, ck);

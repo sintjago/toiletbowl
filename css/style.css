@@ -194,7 +194,7 @@ button#btn-unpack {
   position: fixed;
   inset: 0;
   z-index: 1;
-  background: radial-gradient(ellipse at 50% 42%, transparent 38%, rgba(8, 2, 2, 0.55) 100%);
+  background: radial-gradient(ellipse at 50% 46%, transparent 58%, rgba(8, 2, 2, 0.38) 100%);
 }
 
 .loading {

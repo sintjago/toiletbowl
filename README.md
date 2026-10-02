@@ -32,12 +32,14 @@ Then open [http://localhost:8000](http://localhost:8000).
 
 ![Unpack the whole set](previews/viewer-lineup.png)
 
-- **Unpack set** — opens each lid in turn and takes the inner doll out until all five stand in a row
-- **Click** a closed doll to lift her lid
-- **Click** the doll inside to take her out
-- **Drag** a doll onto an open parent to nest her again
-- **Line up** / **Nest all**
-- Keys: `U` unpack, `O` open, `T` take out, `L` line up, `N` nest all, `1`–`5` select
+The viewer opens on a wide shot of the whole table, then you can unpack the set.
+
+- **Unpack set** — opens each lid and flies the inner doll out until all five stand in a row
+- **Click** a closed doll to lift her lid; the next one peeks from the cup
+- **Click** the inner doll to take her out (she arcs onto the table)
+- **Nest all** packs them back, one into the next
+- **Drag** a doll onto an open parent to nest her by hand
+- Keys: `U` unpack, `N` nest, `O` open, `T` take out, `L` line up, `H` home, `M` mute
 
 ## MagicaVoxel
 
