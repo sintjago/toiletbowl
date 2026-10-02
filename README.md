@@ -24,6 +24,8 @@ python3 -m http.server 8000
 
 Then open [http://localhost:8000](http://localhost:8000).
 
+![A lamp-lit nested doll on a khokhloma cloth](previews/viewer-home.png)
+
 ![Lid open, inner doll peeking out](previews/viewer-peek.png)
 
 ![Take the inner doll out](previews/viewer-open.png)

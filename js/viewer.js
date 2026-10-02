@@ -13,7 +13,7 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = false;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.12;
+renderer.toneMappingExposure = 1.28;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x14080a);
@@ -31,13 +31,13 @@ controls.minDistance = 36;
 controls.maxDistance = 260;
 
 scene.add(new THREE.HemisphereLight(0xffe6c4, 0x2a1010, 0.55));
-const key = new THREE.DirectionalLight(0xfff1d6, 0.85);
+const key = new THREE.DirectionalLight(0xfff1d6, 1.05);
 key.position.set(32, 58, 40);
 scene.add(key);
 scene.add(new THREE.DirectionalLight(0x6a80c0, 0.18)).position.set(-50, 16, -28);
-scene.add(new THREE.DirectionalLight(0xfff6e4, 0.4)).position.set(6, 22, 70);
+scene.add(new THREE.DirectionalLight(0xfff6e4, 0.62)).position.set(6, 22, 70);
 
-const lamp = new THREE.PointLight(0xffc878, 1.55, 160, 1.6);
+const lamp = new THREE.PointLight(0xffc878, 1.85, 170, 1.5);
 lamp.position.set(-10, 62, 18);
 scene.add(lamp);
 const bulb = new THREE.Mesh(
@@ -165,7 +165,7 @@ const pointer = new THREE.Vector2();
 const dummy = new THREE.Object3D();
 const tmpColor = new THREE.Color();
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-const camGoal = new THREE.Vector3(22, 42, 118);
+const camGoal = new THREE.Vector3(24, 44, 132);
 const targetGoal = new THREE.Vector3(0, 24, 0);
 
 let data = null;
@@ -379,6 +379,12 @@ function setStatus() {
   });
 }
 
+function frameHome() {
+  targetGoal.set(0, 24, 0);
+  camGoal.set(24, 44, 132);
+  autoCam = true;
+}
+
 function frameVisible() {
   const vis = actors.filter((a) => a.nestedIn == null);
   if (!vis.length) return;
@@ -390,7 +396,7 @@ function frameVisible() {
   });
   const cx = (minx + maxx) / 2;
   const span = Math.max(40, maxx - minx + 24);
-  const dist = Math.max(118, span * 1.22 + maxh * 0.75);
+  const dist = Math.max(132, span * 1.22 + maxh * 0.75);
   targetGoal.set(cx, maxh * 0.45, 0);
   camGoal.set(cx + dist * 0.14, Math.max(34, maxh * 0.58 + 12), dist);
   autoCam = true;
@@ -542,7 +548,7 @@ async function unpackAll() {
   busy = true;
   snapNested();
   actors[0].pos.set(0, 0, 0);
-  frameVisible();
+  frameHome();
   await wait(500);
   for (let i = 0; i < actors.length - 1; i++) {
     selected = i;
@@ -593,7 +599,7 @@ async function packAll() {
   actors[0].goal.set(0, 0, 0);
   selected = 0;
   setStatus();
-  frameVisible();
+  frameHome();
   busy = false;
 }
 
