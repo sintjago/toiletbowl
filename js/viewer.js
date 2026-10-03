@@ -814,17 +814,58 @@ winterGroup.add(snowfall);
 const teremGroup = new THREE.Group();
 teremGroup.visible = false;
 scene.add(teremGroup);
-for (let i = 0; i < 3; i++) {
-  const candle = new THREE.PointLight(0xffc878, 0.55, 80, 1.6);
-  candle.position.set(-50 + i * 48, 36, -40);
-  teremGroup.add(candle);
+const teremCols = [-62, 0, 62];
+teremCols.forEach((x) => {
+  const col = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.6, 4.2, 78, 12),
+    new THREE.MeshStandardMaterial({ color: 0xc9a227, metalness: 0.55, roughness: 0.35 })
+  );
+  col.position.set(x, 24, -70);
+  col.castShadow = true;
+  teremGroup.add(col);
+  const cap = new THREE.Mesh(
+    new THREE.CylinderGeometry(5.2, 4.4, 4, 12),
+    new THREE.MeshStandardMaterial({ color: 0xf3d48a, metalness: 0.62, roughness: 0.3 })
+  );
+  cap.position.set(x, 64, -70);
+  teremGroup.add(cap);
+  const dome = new THREE.Mesh(
+    new THREE.SphereGeometry(7.5, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshStandardMaterial({ color: 0xe4b23c, metalness: 0.7, roughness: 0.25 })
+  );
+  dome.position.set(x, 66, -70);
+  teremGroup.add(dome);
+  const spire = new THREE.Mesh(
+    new THREE.ConeGeometry(1.4, 10, 8),
+    new THREE.MeshStandardMaterial({ color: 0xffe08a, metalness: 0.65, roughness: 0.28 })
+  );
+  spire.position.set(x, 76, -70);
+  teremGroup.add(spire);
+});
+const arch = new THREE.Mesh(
+  new THREE.TorusGeometry(28, 2.2, 8, 24, Math.PI),
+  new THREE.MeshStandardMaterial({ color: 0xe4b23c, metalness: 0.6, roughness: 0.32 })
+);
+arch.position.set(8, 52, -90);
+arch.rotation.z = Math.PI;
+teremGroup.add(arch);
+[[-28, 4, 22], [22, 4, 20], [-18, 4, -16]].forEach(([x, y, z]) => {
+  const stick = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.45, 6.2, 8),
+    new THREE.MeshStandardMaterial({ color: 0xc4a060, metalness: 0.7, roughness: 0.28 })
+  );
+  stick.position.set(x, y + 3.1, z);
+  teremGroup.add(stick);
   const flame = new THREE.Mesh(
-    new THREE.SphereGeometry(1.2, 8, 8),
+    new THREE.SphereGeometry(1.4, 8, 8),
     new THREE.MeshBasicMaterial({ color: 0xffe08a })
   );
-  flame.position.copy(candle.position);
+  flame.position.set(x, y + 7.2, z);
   teremGroup.add(flame);
-}
+  const glow = new THREE.PointLight(0xffc878, 0.7, 70, 1.5);
+  glow.position.set(x, y + 7.2, z);
+  teremGroup.add(glow);
+});
 
 const clothMaps = {
   izba: cloth.material.map,
@@ -905,31 +946,28 @@ function goldWallpaperTexture() {
   c.width = 1024;
   c.height = 512;
   const g = c.getContext("2d");
-  g.fillStyle = "#3a1014";
+  g.fillStyle = "#6b1a12";
   g.fillRect(0, 0, 1024, 512);
   for (let i = 0; i < 8; i++) {
     const x = i * 128;
-    g.fillStyle = i % 2 ? "#5a181c" : "#3a1014";
+    g.fillStyle = i % 2 ? "#8a2418" : "#5a140e";
     g.fillRect(x, 0, 128, 512);
-    g.strokeStyle = "rgba(228,178,60,0.75)";
-    g.lineWidth = 4;
-    g.beginPath();
-    g.moveTo(x + 4, 0);
-    g.lineTo(x + 4, 512);
-    g.stroke();
-    g.strokeStyle = "rgba(243,212,138,0.7)";
-    g.lineWidth = 1.6;
-    for (let y = 28; y < 500; y += 72) {
+    g.fillStyle = "#e4b23c";
+    g.fillRect(x + 2, 0, 10, 512);
+    g.strokeStyle = "#f3d48a";
+    g.lineWidth = 3;
+    for (let y = 20; y < 500; y += 64) {
       g.beginPath();
       g.moveTo(x + 64, y);
-      g.lineTo(x + 92, y + 20);
-      g.lineTo(x + 64, y + 40);
-      g.lineTo(x + 36, y + 20);
+      g.lineTo(x + 100, y + 18);
+      g.lineTo(x + 64, y + 36);
+      g.lineTo(x + 28, y + 18);
       g.closePath();
       g.stroke();
+      g.fillStyle = "#f6c445";
       g.beginPath();
-      g.arc(x + 64, y + 20, 5, 0, Math.PI * 2);
-      g.stroke();
+      g.arc(x + 64, y + 18, 7, 0, Math.PI * 2);
+      g.fill();
     }
   }
   const tex = new THREE.CanvasTexture(c);
@@ -998,18 +1036,28 @@ function applyRoom(id) {
     dust.material.color.set(0xfff9c4);
     dust.material.opacity = 0.16;
   } else {
-    scene.background.set(0x1a0c14);
-    scene.fog.color.set(0x1a0c14);
-    scene.fog.density = 0.002;
-    floor.material.color.set(0x5a3824);
+    scene.background.set(0x2a1008);
+    scene.fog.color.set(0x2a1008);
+    scene.fog.density = 0.0016;
+    floor.material.color.set(0x4a2410);
     winLight.color.set(0xffd54f);
-    winLight.intensity = 0.95;
-    key.intensity = 0.88;
-    fill.color.set(0xc9a227);
-    fill.intensity = 0.2;
-    rim.intensity = 0.34;
+    winLight.intensity = 1.25;
+    key.intensity = 1.0;
+    fill.color.set(0xffc878);
+    fill.intensity = 0.32;
+    rim.intensity = 0.48;
     dust.material.color.set(0xffe082);
-    dust.material.opacity = 0.24;
+    dust.material.opacity = 0.28;
+    ceiling.material.color.set(0x3a2010);
+    rug.material.color.set(0x7a1810);
+    shade.material.color.set(0xc9a227);
+    shade.material.emissive.set(0x6a4010);
+  }
+  if (id !== "terem") {
+    ceiling.material.color.set(0x241210);
+    rug.material.color.set(0x5a1418);
+    shade.material.color.set(0x8e1c24);
+    shade.material.emissive.set(0x5a1808);
   }
   buildChoosers();
 }
