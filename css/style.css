@@ -104,6 +104,20 @@ html, body {
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: rgba(16, 6, 8, 0.55);
+  backdrop-filter: blur(8px);
+}
+
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,0.18) 0 1px, transparent 1px 3px);
 }
 
 button {
@@ -194,7 +208,7 @@ button#btn-unpack {
   position: fixed;
   inset: 0;
   z-index: 1;
-  background: radial-gradient(ellipse at 50% 46%, transparent 58%, rgba(8, 2, 2, 0.38) 100%);
+  background: radial-gradient(ellipse at 48% 42%, transparent 46%, rgba(8, 2, 2, 0.5) 100%);
 }
 
 .loading {

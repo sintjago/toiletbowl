@@ -327,7 +327,6 @@ def paint_face(spec: DollSpec, x: int, y: int, z: int, cx: float, cz: float, h: 
         return HAIR
     if v > 0.86 and 0.35 < abs(u) < 0.95:
         return HAIR
-    # Tiny side locks at the scarf edge of the window
     if abs(u) > 1.55 and v > 0.30:
         return HAIR
 
@@ -347,25 +346,23 @@ def paint_face(spec: DollSpec, x: int, y: int, z: int, cx: float, cz: float, h: 
         if du * du + dv * dv <= 1.0:
             if h < 18:
                 return HAIR
-            if du * sign < -0.12 and dv < -0.05:
+            if du * sign < -0.18 and dv < -0.08:
                 return WHITE
             return HAIR
-        if h > 18 and abs(u - sign * eye_u) < er_u * 1.15 and abs(v - (eye_v + 0.14)) < 0.045:
-            return HAIR_M
+        brow_v = eye_v + (0.15 if h > 20 else 0.17)
+        if abs(u - sign * eye_u) < er_u * 1.25 and abs(v - brow_v) < (0.05 if h > 16 else 0.08):
+            return HAIR
 
-    # Nose
-    if abs(u) < 0.10 and abs(v - 0.42) < 0.06:
+    if abs(u) < 0.11 and abs(v - 0.42) < 0.07:
         return SKIN_D
 
-    # Smile — corners up
-    mouth_v = 0.26 + 0.10 * (u * u)
-    if abs(u) < 0.38 and abs(v - mouth_v) < (0.055 if h > 20 else 0.08):
+    mouth_v = 0.25 + 0.12 * (u * u)
+    if abs(u) < 0.40 and abs(v - mouth_v) < (0.055 if h > 20 else 0.085):
         return LIPS
 
-    # Blush circles
     for sign in (-1.0, 1.0):
-        du = (u - sign * 0.52) / 0.28
-        dv = (v - 0.36) / 0.16
+        du = (u - sign * 0.50) / 0.32
+        dv = (v - 0.35) / 0.18
         if du * du + dv * dv <= 1.0:
             return BLUSH
 
@@ -379,35 +376,44 @@ def paint_face(spec: DollSpec, x: int, y: int, z: int, cx: float, cz: float, h: 
 def paint_scarf(spec: DollSpec, phi: float, t: float, r: float, r_out: float, scale: float) -> int:
     hw = face_half_width(t, spec)
 
-    # Gold rim around the face opening
+    if spec.kokoshnik and t > 0.92:
+        jewel = abs(math.sin(phi * 6.5)) > 0.78
+        if t > 0.96:
+            return ROSE if jewel else GOLD
+        if t > 0.935:
+            return GOLD
+
     if 0.54 < t < 0.90 and abs(abs(phi) - hw) < 0.11 and abs(phi) >= hw * 0.72:
         return spec.accent
 
-    # Crown stays in the scarf color with a gold band, not a pale cap
     if t > 0.90:
         if 0.935 < t < 0.97:
             return spec.accent
         return spec.scarf
 
-    # Forehead band above the face
     if 0.86 < t < 0.91:
         return spec.accent
 
-    if scale > 18:
-        if spec.motif == "frost":
-            col = stamp_snow(phi - 1.05, t - 0.76, 0.16)
-        elif spec.motif == "sunflower":
-            col = stamp_sunflower(phi - 1.0, t - 0.76, 0.15)
-        else:
-            col = stamp_rose(phi - 1.05, t - 0.76, 0.14 if scale > 30 else 0.18, spec)
-        if col is not None:
-            return col
+    if scale > 14 and abs(phi) > hw + 0.08:
+        spots = [(-1.12, 0.73), (1.12, 0.73), (-1.95, 0.70), (1.95, 0.70), (2.85, 0.68)]
+        for dp, dt in spots:
+            if spec.motif == "frost":
+                col = stamp_snow(phi - dp, t - dt, 0.15 if scale > 24 else 0.18)
+            elif spec.motif == "sunflower":
+                col = stamp_sunflower(phi - dp, t - dt, 0.14 if scale > 24 else 0.17)
+            elif spec.motif == "berry":
+                col = stamp_berry(phi - dp, t - dt, 0.13)
+            else:
+                col = stamp_rose(phi - dp, t - dt, 0.15 if scale > 28 else 0.18, spec)
+            if col is not None:
+                return col
+            leaf = stamp_leaf(phi - dp + 0.16, t - dt - 0.07, 0.10)
+            if leaf is not None:
+                return leaf
 
-    if scale > 16:
-        gx = math.sin(phi * 4.0 + t * 14.0)
-        gy = math.cos(phi * 6.0 - t * 11.0)
-        if gx > 0.78 and gy > 0.4 and 0.62 < t < 0.90 and abs(phi) > hw + 0.12:
-            return spec.flower if int((phi + 3) * 7 + t * 18) % 2 == 0 else spec.accent
+    if scale > 14 and 0.60 < t < 0.88 and abs(phi) > hw + 0.14:
+        if math.sin(phi * 5.0 + t * 16.0) > 0.82 and math.cos(phi * 7.0 - t * 10.0) > 0.2:
+            return spec.flower if int((phi + 3) * 8 + t * 20) % 2 == 0 else spec.accent
 
     if t < 0.60:
         return spec.scarf_d
@@ -422,12 +428,14 @@ def stamp_snow(u: float, v: float, radius: float) -> int | None:
     rr = math.hypot(u, v)
     if rr > radius:
         return None
-    if rr < radius * 0.18:
+    if rr < radius * 0.20:
         return WHITE
     ang = abs(math.atan2(v, u))
     arm = min(ang % (math.pi / 3), math.pi / 3 - (ang % (math.pi / 3)))
-    if arm < 0.18 and rr < radius * 0.92:
+    if arm < 0.22 and rr < radius * 0.95:
         return GOLD_L if rr > radius * 0.55 else WHITE
+    if rr < radius * 0.38:
+        return GOLD
     return None
 
 
@@ -435,34 +443,38 @@ def stamp_sunflower(u: float, v: float, radius: float) -> int | None:
     rr = math.hypot(u, v)
     if rr > radius:
         return None
-    if rr < radius * 0.32:
+    if rr < radius * 0.30:
         return BROWN
     ang = math.atan2(v, u)
-    petal = radius * (0.7 + 0.3 * (0.5 + 0.5 * math.cos(ang * 8.0)))
+    petal = radius * (0.68 + 0.32 * (0.5 + 0.5 * math.cos(ang * 10.0)))
     if rr < petal:
-        return YELLOW_L if rr > radius * 0.7 else YELLOW
+        return YELLOW_L if rr > radius * 0.72 else YELLOW
     return None
 
 
 def stamp_berry(u: float, v: float, radius: float) -> int | None:
-    for dx, dy in ((0.0, 0.02), (-0.45, -0.15), (0.42, -0.12)):
-        if math.hypot(u - dx * radius, v - dy * radius) < radius * 0.38:
+    for dx, dy in ((0.0, 0.04), (-0.48, -0.12), (0.46, -0.10), (-0.18, -0.42), (0.20, -0.40)):
+        if math.hypot(u - dx * radius, v - dy * radius) < radius * 0.34:
             return BERRY
-    if math.hypot(u, v + radius * 0.35) < radius * 0.28:
+    if math.hypot(u, v + radius * 0.42) < radius * 0.30:
         return LEAF
+    if math.hypot(u - radius * 0.38, v + radius * 0.28) < radius * 0.22:
+        return LEAF_L
     return None
 
 
 def stamp_rose(u: float, v: float, radius: float, spec: DollSpec) -> int | None:
-    rr = math.hypot(u, v * 1.05)
+    rr = math.hypot(u, v * 1.02)
     if rr > radius:
         return None
     ang = math.atan2(v, u)
-    petal = radius * (0.62 + 0.38 * (0.5 + 0.5 * math.cos(ang * 5.0)))
-    if rr < radius * 0.26:
-        return spec.flower_c
+    petal = radius * (0.58 + 0.42 * (0.5 + 0.5 * math.cos(ang * 5.0)))
     if rr < petal:
-        return spec.flower if rr < radius * 0.62 else spec.flower_l
+        if rr < radius * 0.20:
+            return spec.flower_c
+        if rr < radius * 0.78 or math.cos(ang * 5.0) < 0.15:
+            return spec.flower
+        return spec.flower_l
     return None
 
 
@@ -478,47 +490,54 @@ def stamp_leaf(u: float, v: float, radius: float) -> int | None:
 
 
 def paint_body(spec: DollSpec, phi: float, t: float, scale: float) -> int:
-    # Waist gold band near the split
     if abs(t - SPLIT_T) < 0.018 + 0.6 / scale:
         return spec.accent
     if abs(t - 0.08) < 0.016 + 0.5 / scale:
-        return spec.accent  # hem
+        return spec.accent
+    if abs(t - 0.20) < 0.010 + 0.35 / scale and abs(phi) > 0.55:
+        return spec.accent
 
-    apron = abs(phi) < 0.62 and 0.10 < t < 0.46
+    apron = abs(phi) < 0.68 and 0.10 < t < 0.47
     if apron:
-        # Bouquet
         col = bouquet(phi, t, scale, spec)
         if col is not None:
             return col
-        # Apron panel
-        if abs(phi) < 0.50:
-            if abs(abs(phi) - 0.48) < 0.04 or abs(t - 0.45) < 0.015 or abs(t - 0.11) < 0.015:
+        if abs(phi) < 0.54:
+            if abs(abs(phi) - 0.50) < 0.045 or abs(t - 0.455) < 0.016 or abs(t - 0.115) < 0.016:
                 return spec.accent
-            # linen shading
-            if phi > 0.25:
+            if abs(phi) < 0.46 and 0.14 < t < 0.42:
+                if math.sin(phi * 18.0) > 0.88 and math.cos(t * 40.0) > 0.4:
+                    return spec.accent
+            if phi > 0.28:
                 return WOOD_RIM if spec.apron == CREAM else spec.apron
             return spec.apron
 
-    # Side flowers on dress for larger dolls
-    if scale > 22 and not apron:
-        col = stamp_rose(phi - 1.35, t - 0.30, 0.14, spec)
-        if col:
-            return col
-        col = stamp_rose(phi + 1.45, t - 0.26, 0.12, spec)
-        if col:
-            return col
+    if scale > 16 and not apron:
+        for dp, dt, rad in ((-1.28, 0.31, 0.16), (1.38, 0.27, 0.14), (-1.55, 0.18, 0.11), (1.60, 0.17, 0.11)):
+            if spec.motif == "frost":
+                col = stamp_snow(phi - dp, t - dt, rad)
+            elif spec.motif == "sunflower":
+                col = stamp_sunflower(phi - dp, t - dt, rad)
+            elif spec.motif == "berry":
+                col = stamp_berry(phi - dp, t - dt, rad * 0.9)
+            else:
+                col = stamp_rose(phi - dp, t - dt, rad, spec)
+            if col:
+                return col
+            leaf = stamp_leaf(phi - dp + 0.14, t - dt - 0.08, rad * 0.7)
+            if leaf:
+                return leaf
 
-    # Khokhloma-ish dash pattern
-    if scale > 18:
-        wave = math.sin(phi * 6.0 + t * 22.0)
-        if wave > 0.82 and 0.14 < t < 0.44 and abs(phi) > 0.7:
-            return spec.accent if (int(t * 30) % 2 == 0) else spec.flower
+    if scale > 16:
+        wave = math.sin(phi * 5.5 + t * 20.0)
+        if wave > 0.74 and 0.13 < t < 0.45 and abs(phi) > 0.7:
+            return spec.accent if (int(t * 28 + phi * 4) % 2 == 0) else spec.flower
 
-    # Hands on the apron edge for the two largest
-    if scale > 24 and 0.28 < t < 0.36 and 0.58 < abs(phi) < 0.78:
+    if scale > 22 and 0.27 < t < 0.37 and 0.56 < abs(phi) < 0.80:
         return SKIN
+    if scale > 22 and 0.36 < t < 0.42 and 0.54 < abs(phi) < 0.78:
+        return spec.scarf_d
 
-    # Dress shading
     if abs(t - 0.28) < 0.02 and abs(phi) > 1.2:
         return spec.dress_d
     if phi > 0.9:
@@ -529,46 +548,46 @@ def paint_body(spec: DollSpec, phi: float, t: float, scale: float) -> int:
 
 
 def bouquet(phi: float, t: float, scale: float, spec: DollSpec) -> int | None:
-    s = 1.0 if scale > 30 else 1.2 if scale > 20 else 1.45
+    s = 1.25 if scale > 30 else 1.45 if scale > 20 else 1.7
     motif = spec.motif
     if motif == "frost":
-        col = stamp_snow(phi, t - 0.32, 0.13 * s)
+        col = stamp_snow(phi, t - 0.33, 0.20 * s)
         if col:
             return col
-        col = stamp_berry(phi + 0.22, t - 0.24, 0.08 * s)
-        if col:
-            return col
-        col = stamp_berry(phi - 0.22, t - 0.24, 0.08 * s)
-        if col:
-            return col
+        for dp, dt in ((0.26, 0.23), (-0.26, 0.23), (0.0, 0.20)):
+            col = stamp_berry(phi + dp, t - dt, 0.10 * s)
+            if col:
+                return col
     elif motif == "sunflower":
-        col = stamp_sunflower(phi, t - 0.31, 0.14 * s)
+        col = stamp_sunflower(phi, t - 0.32, 0.20 * s)
         if col:
             return col
-        col = stamp_leaf(phi + 0.28, t - 0.22, 0.11 * s)
+        col = stamp_leaf(phi + 0.32, t - 0.20, 0.14 * s)
         if col:
             return col
-        col = stamp_leaf(-(phi + 0.28), t - 0.22, 0.11 * s)
+        col = stamp_leaf(-(phi + 0.32), t - 0.20, 0.14 * s)
         if col:
             return col
     elif motif == "berry":
-        return stamp_berry(phi, t - 0.28, 0.16 * s)
+        return stamp_berry(phi, t - 0.30, 0.22 * s)
     elif motif == "bloom":
-        return stamp_rose(phi, t - 0.30, 0.14 * s, spec)
+        return stamp_rose(phi, t - 0.31, 0.20 * s, spec)
     else:
         roses = [
-            (0.00, 0.33, 0.12 * s),
-            (-0.20, 0.26, 0.09 * s),
-            (0.20, 0.26, 0.09 * s),
+            (0.00, 0.34, 0.145 * s),
+            (-0.22, 0.26, 0.11 * s),
+            (0.22, 0.27, 0.11 * s),
         ]
         for ru, rv, rr in roses:
             col = stamp_rose(phi - ru, t - rv, rr, spec)
             if col is not None:
                 return col
         leaves = [
-            (-0.32, 0.24, 0.11, 0.7),
-            (0.32, 0.24, 0.11, -0.7),
-            (0.00, 0.18, 0.09, 0.0),
+            (-0.34, 0.22, 0.13, 0.7),
+            (0.34, 0.22, 0.13, -0.7),
+            (0.00, 0.16, 0.10, 0.0),
+            (-0.18, 0.17, 0.09, 0.4),
+            (0.18, 0.17, 0.09, -0.4),
         ]
         for lu, lv, lr, rot in leaves:
             u, v = phi - lu, t - lv
@@ -576,7 +595,7 @@ def bouquet(phi: float, t: float, scale: float, spec: DollSpec) -> int | None:
             col = stamp_leaf(u * c - v * s_, u * s_ + v * c, lr * s)
             if col is not None:
                 return col
-        if abs(phi) < 0.035 and 0.12 < t < 0.20:
+        if abs(phi) < 0.04 and 0.11 < t < 0.18:
             return LEAF_D
     return None
 
