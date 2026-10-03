@@ -747,6 +747,251 @@ def bouquet(phi: float, t: float, scale: float, spec: DollSpec) -> int | None:
     return None
 
 
+@dataclass
+class HomeSpec:
+    key: str
+    name: str
+    name_ru: str
+    w: int
+    h: int
+    d: int
+    wall: int
+    wall_d: int
+    wall_l: int
+    roof: int
+    roof_d: int
+    trim: int
+    door: int
+    motif: str
+    kind: str
+    flower: int = ROSE
+    flower_l: int = ROSE_L
+    flower_c: int = GOLD
+
+
+HOME_SPECS = [
+    HomeSpec("matryona", "Matryona", "Матрёна", 40, 46, 32, WOOD, WOOD_D, WOOD_RIM, SCARLET, SCARLET_D, GOLD, SCARLET_D, "rose", "sister"),
+    HomeSpec("darya", "Darya", "Дарья", 34, 40, 28, WOOD, WOOD_D, BLUE_L, BLUE, BLUE_D, WHITE, BLUE_D, "frost", "sister"),
+    HomeSpec("olga", "Olga", "Ольга", 28, 34, 24, WOOD, WOOD_D, GREEN_L, GREEN_M, LEAF_D, YELLOW, LEAF_D, "sunflower", "sister", YELLOW, YELLOW_L, ORANGE),
+    HomeSpec("natasha", "Natasha", "Наташа", 22, 28, 20, WOOD, WOOD_D, YELLOW_L, YELLOW, YELLOW_D, RASP, RASP, "berry", "sister", RASP, PINK_L, GOLD),
+    HomeSpec("masha", "Masha", "Маша", 16, 22, 16, PINK, RASP_D, PINK_L, PINK, RASP, GOLD, RASP, "bloom", "sister"),
+    HomeSpec("ivan", "Ivan", "Иван", 40, 46, 32, WOOD_D, BARK, WOOD, SCARLET, SCARLET_D, GOLD, BROWN, "wheat", "husband"),
+    HomeSpec("pavel", "Pavel", "Павел", 34, 40, 28, WOOD, WOOD_D, BLUE_L, BLUE_D, BLUE, WHITE, BLUE, "sea", "husband"),
+    HomeSpec("boris", "Boris", "Борис", 28, 34, 24, WOOD, BARK, GREEN_L, LEAF, LEAF_D, YELLOW, BROWN, "forest", "husband", YELLOW, YELLOW_L, GOLD),
+    HomeSpec("yuri", "Yuri", "Юрий", 22, 28, 20, WOOD, BARK, ORANGE, ORANGE, YELLOW_D, GOLD, YELLOW_D, "rascal", "husband"),
+    HomeSpec("kolya", "Kolya", "Коля", 16, 22, 16, WOOD, BARK, BLUE_L, BLUE_M, BLUE_D, GOLD, BLUE, "boy", "husband"),
+]
+
+
+@dataclass
+class VoxelModel:
+    w: int
+    h: int
+    d: int
+    voxels: dict = field(default_factory=dict)
+
+
+def generate_home(spec: HomeSpec) -> VoxelModel:
+    w, h, d = spec.w, spec.h, spec.d
+    vox: dict[tuple[int, int, int], int] = {}
+
+    def setc(x: int, y: int, z: int, c: int) -> None:
+        if 0 <= x < w and 0 <= y < h and 0 <= z < d:
+            vox[(x, y, z)] = c
+
+    found = max(2, h // 18)
+    wall_top = max(found + 6, int(h * 0.48))
+    door_w = max(2, w // 6)
+    door_h = max(5, int((wall_top - found) * 0.68))
+    dx0 = w // 2 - door_w // 2
+    dx1 = dx0 + door_w
+    win_w = max(2, w // 9)
+    win_h = max(2, (wall_top - found) // 4)
+    win_y0 = found + max(3, (wall_top - found) // 3)
+
+    def is_door(x: int, y: int, z: int) -> bool:
+        return z == d - 1 and dx0 <= x < dx1 and found <= y < found + door_h
+
+    def window_slots() -> list[tuple[int, int, int, str]]:
+        slots = []
+        if w >= 22:
+            slots.append((dx0 - win_w - 2, win_y0, d - 1, "z"))
+            slots.append((dx1 + 2, win_y0, d - 1, "z"))
+        elif w >= 14:
+            slots.append((2, win_y0, d - 1, "z"))
+        if w >= 18:
+            slots.append((0, win_y0, d // 2 - win_w // 2, "x0"))
+            slots.append((w - 1, win_y0, d // 2 - win_w // 2, "x1"))
+        if spec.motif == "sea" and w >= 18:
+            slots.append((w // 2 - win_w // 2, win_y0 + 1, 0, "z0"))
+        return slots
+
+    def in_window(x: int, y: int, z: int) -> bool:
+        for wx, wy, wz, face in window_slots():
+            if face == "z" and z == wz and wx <= x < wx + win_w and wy <= y < wy + win_h:
+                return True
+            if face == "z0" and z == 0 and wx <= x < wx + win_w and wy <= y < wy + win_h:
+                return True
+            if face == "x0" and x == 0 and wz <= z < wz + win_w and wy <= y < wy + win_h:
+                return True
+            if face == "x1" and x == w - 1 and wz <= z < wz + win_w and wy <= y < wy + win_h:
+                return True
+        return False
+
+    for y in range(found):
+        for x in range(w):
+            for z in range(d):
+                edge = x in (0, w - 1) or z in (0, d - 1) or y == 0
+                setc(x, y, z, WOOD_D if edge else WOOD)
+
+    for y in range(found, wall_top):
+        for x in range(w):
+            for z in range(d):
+                if not (x in (0, w - 1) or z in (0, d - 1)):
+                    continue
+                if is_door(x, y, z) or in_window(x, y, z):
+                    continue
+                log = spec.wall_d if y % 2 == 0 else spec.wall
+                if (x + z + y) % 9 == 0:
+                    log = spec.wall_l
+                setc(x, y, z, log)
+
+    for y in range(found, found + door_h):
+        for x in range(dx0, dx1):
+            frame = x in (dx0, dx1 - 1) or y == found + door_h - 1
+            setc(x, y, d - 1, spec.trim if frame else spec.door)
+    setc(dx1 - 1, found + door_h // 2, d - 1, GOLD)
+    setc(w // 2, found + door_h - 2, d - 1, spec.trim)
+
+    for wx, wy, wz, face in window_slots():
+        for i in range(win_w):
+            for j in range(win_h):
+                frame = i in (0, win_w - 1) or j in (0, win_h - 1)
+                pane = GOLD_L if (i + j) % 2 else YELLOW_L
+                col = spec.trim if frame else pane
+                if spec.motif == "sea" and not frame:
+                    col = TEAL if (i + j) % 2 else BLUE_L
+                if face == "z":
+                    setc(wx + i, wy + j, wz, col)
+                elif face == "z0":
+                    setc(wx + i, wy + j, 0, col)
+                elif face == "x0":
+                    setc(0, wy + j, wz + i, col)
+                else:
+                    setc(w - 1, wy + j, wz + i, col)
+
+    ridge = h - 2
+    for y in range(wall_top - 1, ridge + 1):
+        t = (y - (wall_top - 1)) / max(1, ridge - (wall_top - 1))
+        half = max(1, int(round((1.0 - t) * (w * 0.5 + 0.6))))
+        x0 = w // 2 - half
+        x1 = w // 2 + half
+        for x in range(x0, x1 + 1):
+            for z in range(d):
+                edge = x in (x0, x1) or y == ridge or z in (0, d - 1)
+                if not edge and 0 < x < w - 1 and wall_top <= y < ridge:
+                    continue
+                col = spec.roof_d if x in (x0, x1) else spec.roof
+                if spec.motif == "frost" and (y >= ridge - 1 or (edge and y % 2 == 0)):
+                    col = WHITE
+                if spec.motif == "forest" and edge and (x + y) % 5 == 0:
+                    col = LEAF
+                setc(x, y, z, col)
+                if z == d - 1 and x in (x0, x1) and y >= wall_top:
+                    setc(x, y, z, spec.trim)
+
+    cx = int(w * 0.72)
+    cz = max(2, d // 3)
+    for y in range(wall_top, h):
+        for x in range(cx, cx + max(2, w // 12)):
+            for z in range(cz, cz + max(2, d // 10)):
+                setc(x, y, z, SCARLET_D if y < h - 1 else BLACK)
+    if h > 18:
+        setc(cx, h - 1, cz, GOLD)
+
+    if spec.motif == "frost":
+        for x in range(2, w - 2, 2):
+            for k in range(1 + (x % 3)):
+                setc(x, wall_top - 1 - k, d - 1, WHITE)
+                setc(x, wall_top - 1 - k, 0, WHITE)
+
+    gable_h = ridge - wall_top
+    if gable_h >= 4:
+        for y in range(wall_top, ridge):
+            for x in range(w):
+                if (x, y, d - 1) not in vox:
+                    continue
+                if vox[(x, y, d - 1)] not in (spec.roof, spec.roof_d, spec.trim, WHITE):
+                    continue
+                u = (x - (w - 1) / 2) / max(4.0, w * 0.28)
+                v = (y - wall_top) / max(3.0, gable_h * 0.7) - 0.15
+                flower = None
+                if spec.motif == "rose":
+                    flower = stamp_rose(u, v, 0.85, spec)
+                elif spec.motif == "frost":
+                    flower = stamp_snow(u, v, 0.7)
+                elif spec.motif in ("sunflower", "forest"):
+                    flower = stamp_sunflower(u, v, 0.75)
+                elif spec.motif == "berry":
+                    flower = stamp_berry(u, v, 0.7)
+                elif spec.motif == "bloom":
+                    flower = stamp_rose(u, v, 0.8, spec)
+                elif spec.motif == "wheat":
+                    flower = stamp_wheat(u, v, 0.7)
+                elif spec.motif == "rascal":
+                    if abs(abs(u) - 0.45) < 0.12 and abs(v) < 0.35:
+                        flower = ORANGE
+                elif spec.motif == "boy":
+                    if math.hypot(u, v) < 0.28:
+                        flower = BLUE_L
+                elif spec.motif == "sea":
+                    if math.hypot(u, v) < 0.22:
+                        flower = WHITE
+                if flower is not None:
+                    setc(x, y, d - 1, flower)
+
+    # stoop
+    for s in range(2):
+        for x in range(dx0 - 1, dx1 + 1):
+            setc(x, found - 1 + s, min(d - 1, d - 1), WOOD_RIM if s == 0 else WOOD)
+
+    return VoxelModel(w, h, d, vox)
+
+
+def write_homes() -> None:
+    models = [generate_home(spec) for spec in HOME_SPECS]
+    data = {
+        "palette": PALETTE_HEX[:49],
+        "homes": [],
+    }
+    fronts, isos = [], []
+    for spec, model in zip(HOME_SPECS, models):
+        print(f"home {spec.name}: {len(model.voxels)} voxels, size={model.w}x{model.h}x{model.d}")
+        write_vox(MODELS / f"{spec.key}-home.vox", model.voxels, (model.w, model.h, model.d))
+        data["homes"].append({
+            "key": spec.key,
+            "name": spec.name,
+            "nameRu": spec.name_ru,
+            "kind": spec.kind,
+            "motif": spec.motif,
+            "size": [model.w, model.h, model.d],
+            "voxels": [[x, y, z, c] for (x, y, z), c in sorted(model.voxels.items())],
+        })
+        front = render_front(model, px=max(5, 12 - model.h // 8))
+        iso = render_iso(model, s=max(4, 10 - model.h // 10))
+        front.save(PREVIEWS / f"{spec.key}-home-front.png")
+        iso.save(PREVIEWS / f"{spec.key}-home-iso.png")
+        fronts.append(front)
+        isos.append(iso)
+    path = MODELS / "homes.json"
+    path.write_text(json.dumps(data, separators=(",", ":")))
+    print("wrote", path, "bytes", path.stat().st_size)
+    compose_row(fronts[:5], bg=(52, 28, 24)).save(PREVIEWS / "homes-sisters-front.png")
+    compose_row(fronts[5:], bg=(52, 28, 24)).save(PREVIEWS / "homes-husbands-front.png")
+    compose_row(isos[:5], bg=(52, 28, 24)).save(PREVIEWS / "homes-sisters-iso.png")
+    compose_row(isos[5:], bg=(52, 28, 24)).save(PREVIEWS / "homes-husbands-iso.png")
+
+
 def write_vox(path: Path, voxels: dict[tuple[int, int, int], int], size: tuple[int, int, int]) -> None:
     """MagicaVoxel .vox — Z is up, so store (x, z, y)."""
     w, h, d = size  # x, y-up, z
@@ -954,6 +1199,7 @@ def main() -> None:
 
     sisters = write_family("matryoshka", SPECS, "dolls.json")
     write_family("husbands", HUSBAND_SPECS, "husbands.json")
+    write_homes()
 
     # Keep the original preview names used by the README.
     nw, nh, nd = sisters[0].w, sisters[0].h, sisters[0].d

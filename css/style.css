@@ -212,6 +212,10 @@ button#btn-unpack {
   font-size: 1.02rem;
 }
 
+button#btn-home {
+  background: linear-gradient(#8a6a22, #6b151c);
+}
+
 .status {
   margin-left: 6px;
   font-size: 0.95rem;

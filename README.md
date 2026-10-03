@@ -42,7 +42,7 @@ Then open [http://localhost:8000](http://localhost:8000).
 
 ![Unpack the whole set](previews/viewer-lineup.png)
 
-The viewer opens on a wide shot of the whole table. The app is bilingual — **RU / EN** in the corner. Pick the **sisters** or the **husbands** (Иван and his sons, nested the same way), and move the table between four rooms: the lamp-lit **izba**, a snowy **winter** yard, a summer **meadow**, and a gilded **terem**.
+The viewer opens on a wide shot of the whole table. Each doll has a voxel house behind it — a little village of izbas painted in their colors. The app is bilingual — **RU / EN** in the corner. Pick the **sisters** or the **husbands** (Иван and his sons, nested the same way), and move the table between four rooms: the lamp-lit **izba**, a snowy **winter** yard, a summer **meadow**, and a gilded **terem**.
 
 Each sister has her own temper: Matryona the unhurried matriarch, Darya who skates like frost, Olga who turns to the lamp, Natasha who cannot sit still, and Masha the bouncing baby. Ivan’s line is proud, seafaring, bearish, restless, and tiny.
 
@@ -50,8 +50,10 @@ Each sister has her own temper: Matryona the unhurried matriarch, Darya who skat
 - **Click** a closed doll to lift her lid; the next one peeks from the cup
 - **Click** the inner doll to take her out (she arcs onto the table)
 - **Nest all** packs them back, one into the next
+- **Go home** sends each doll to the edge of the cloth facing their own izba
+- **Click** a house to call that doll
 - **Drag** a doll onto an open parent to nest her by hand
-- Keys: `U` unpack, `N` nest, `O` open, `T` take out, `L` line up, `H` home, `M` mute
+- Keys: `U` unpack, `N` nest, `O` open, `T` take out, `L` line up, `G` go home, `H` camera home, `M` mute
 
 ## MagicaVoxel
 
@@ -61,6 +63,7 @@ Each sister has her own temper: Matryona the unhurried matriarch, Darya who skat
 - `ivan.vox`, `pavel.vox`, `boris.vox`, `yuri.vox`, `kolya.vox` — the husbands
 - `matryoshka-nested.vox` / `husbands-nested.vox` — each family stacked inside one another
 - `matryoshka-lineup.vox` / `husbands-lineup.vox` — each family standing in a row
+- `*-home.vox` — each doll’s voxel house; `homes.json` for the viewer
 
 In MagicaVoxel you can hide layers or split at the waist (`splitY` is also stored in `models/dolls.json`) to lift lids by hand.
 
@@ -70,4 +73,4 @@ In MagicaVoxel you can hide layers or split at the waist (`splitY` is also store
 python3 tools/generate.py
 ```
 
-Writes `.vox` files, `models/dolls.json` and `models/husbands.json` for the viewer, and PNG previews under `previews/`.
+Writes `.vox` files, `models/dolls.json`, `models/husbands.json`, and `models/homes.json` for the viewer, and PNG previews under `previews/`.

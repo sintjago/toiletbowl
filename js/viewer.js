@@ -229,8 +229,8 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.26;
 
-const HOME_CAM = new THREE.Vector3(92, 48, 188);
-const HOME_TARGET = new THREE.Vector3(-2, 18, 2);
+const HOME_CAM = new THREE.Vector3(108, 62, 220);
+const HOME_TARGET = new THREE.Vector3(-2, 20, -12);
 const HOME_YAW = Math.atan2(HOME_CAM.x, HOME_CAM.z);
 
 const scene = new THREE.Scene();
@@ -248,8 +248,8 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.target.copy(HOME_TARGET);
 controls.maxPolarAngle = Math.PI * 0.49;
-controls.minDistance = 105;
-controls.maxDistance = 420;
+controls.minDistance = 120;
+controls.maxDistance = 480;
 
 scene.add(new THREE.HemisphereLight(0xffe0b8, 0x1a0a0c, 0.52));
 const key = new THREE.DirectionalLight(0xfff1d6, 0.7);
@@ -1130,6 +1130,8 @@ const targetGoal = HOME_TARGET.clone();
 
 let data = null;
 let actors = [];
+let homesData = null;
+let homeActors = [];
 let selected = 0;
 let dragging = null;
 let dragOffset = new THREE.Vector3();
@@ -1286,8 +1288,23 @@ function yawToward(from, target) {
   return Math.atan2(target.x - from.x, target.z - from.z);
 }
 
+function homeDoorstep(i) {
+  const h = homeActors[i];
+  if (!h) return new THREE.Vector3(lineupX(i), 0, 0);
+  const dir = new THREE.Vector3(h.pos.x, 0, h.pos.z);
+  if (dir.lengthSq() < 1) dir.set(0, 0, -1);
+  dir.setLength(38);
+  return dir;
+}
+
+function nearHome(a) {
+  if (!homeActors[a.index] || a.nestedIn != null || a.flight) return false;
+  return a.goal.distanceTo(homeDoorstep(a.index)) < 10;
+}
+
 function pickGlance(a) {
   const p = personaOf(a.index);
+  if (homeActors[a.index] && Math.random() < 0.42) return yawToward(a.pos, homeActors[a.index].pos);
   if (p.glance === "window") return yawToward(a.pos, new THREE.Vector3(8, 0, -220));
   if (p.glance === "lamp") return yawToward(a.pos, new THREE.Vector3(-8, 0, 14));
   if (p.glance === "camera") return HOME_YAW + (Math.random() - 0.5) * 0.35;
@@ -1403,6 +1420,91 @@ class DollActor {
   }
 }
 
+function homeSlot(i, n) {
+  const t = n <= 1 ? 0.5 : i / (n - 1);
+  const a = -0.92 + t * 1.84;
+  const r = 112;
+  return new THREE.Vector3(Math.sin(a) * r, -15.4, -Math.cos(a) * r - 10);
+}
+
+class HomeActor {
+  constructor(index, spec, palette, pos) {
+    this.index = index;
+    this.spec = spec;
+    this.w = spec.size[0];
+    this.h = spec.size[1];
+    this.d = spec.size[2];
+    this.pos = pos.clone();
+    this.group = new THREE.Group();
+    const origin = { x: (this.w - 1) / 2, y: 0, z: (this.d - 1) / 2 };
+    this.group.add(makePieces(spec.voxels, palette, origin));
+    this.hit = new THREE.Mesh(
+      new THREE.BoxGeometry(this.w * 1.05, this.h, this.d * 1.05),
+      new THREE.MeshBasicMaterial({ visible: false })
+    );
+    this.hit.position.y = this.h / 2;
+    this.hit.userData = { part: "home", index };
+    this.group.add(this.hit);
+    const persona = personaOf(index);
+    this.ring = new THREE.Mesh(
+      new THREE.RingGeometry(Math.max(this.w, this.d) * 0.42, Math.max(this.w, this.d) * 0.55, 28),
+      new THREE.MeshBasicMaterial({ color: persona.ring, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false })
+    );
+    this.ring.rotation.x = -Math.PI / 2;
+    this.ring.position.y = 0.2;
+    this.group.add(this.ring);
+    this.group.position.copy(pos);
+    scene.add(this.group);
+  }
+}
+
+function clearHomes() {
+  homeActors.forEach((h) => {
+    h.group.traverse((o) => {
+      if (o.isInstancedMesh && o.material) o.material.dispose();
+    });
+    scene.remove(h.group);
+  });
+  homeActors = [];
+}
+
+function spawnHomes(kind) {
+  clearHomes();
+  if (!homesData) return;
+  const want = kind === "husbands" ? "husband" : "sister";
+  const list = homesData.homes.filter((h) => h.kind === want);
+  list.forEach((spec, i) => {
+    homeActors.push(new HomeActor(i, spec, homesData.palette, homeSlot(i, list.length)));
+  });
+}
+
+function frameVillage() {
+  targetGoal.set(0, 18, -20);
+  camGoal.set(118, 68, 232);
+  autoCam = true;
+}
+
+async function goHome() {
+  if (busy) return;
+  busy = true;
+  actors.forEach((a, i) => {
+    a.nestedIn = null;
+    a.open = false;
+    a.lidGoal = 0;
+    a.flight = null;
+    const dest = homeDoorstep(i);
+    flyTo(a, dest);
+    a.goalYaw = homeActors[i] ? yawToward(dest, homeActors[i].pos) : HOME_YAW;
+    a.flourish = { t: -0.12 - i * 0.1, dur: 0.8, kind: personaOf(i).motion };
+    audio.chime(i);
+  });
+  selected = 0;
+  setStatus();
+  frameVillage();
+  await wait(200);
+  busy = false;
+}
+
 function lineupX(index) {
   const gap = 8;
   const widths = actors.map((a) => a.w);
@@ -1417,6 +1519,7 @@ function setStatus() {
   const child = actors[selected + 1];
   let flavor = personaQuote(a.index, "table");
   if (a.nestedIn != null) flavor = personaQuote(a.index, "inside");
+  else if (nearHome(a)) flavor = personaQuote(a.index, "home");
   else if (a.open && child && child.nestedIn === a.index) flavor = personaQuote(a.index, "peek");
   else if (a.open) flavor = personaQuote(a.index, "open");
   const shown = lang === "ru" ? a.spec.nameRu : a.spec.name;
@@ -1671,7 +1774,8 @@ function buildRoster() {
     b.className = `doll-btn persona-${p.key}`;
     const shown = lang === "ru" ? a.spec.nameRu : a.spec.name;
     const other = lang === "ru" ? a.spec.name : a.spec.nameRu;
-    b.innerHTML = `<span class="ru">${shown}</span>${other}<span class="role">${personaRole(i)}</span>`;
+    const house = I18N[lang].homes[p.key] || "";
+    b.innerHTML = `<span class="ru">${shown}</span>${other}<span class="role">${personaRole(i)}${house ? ` · ${house}` : ""}</span>`;
     b.addEventListener("click", () => {
       if (busy) return;
       audio.ensure();
@@ -1699,6 +1803,9 @@ function pick(event) {
     if (a.enclosed()) return;
     raycaster.intersectObjects([a.baseHit, a.lidHit], false).forEach((h) => hits.push(h));
   });
+  homeActors.forEach((h) => {
+    raycaster.intersectObject(h.hit, false).forEach((hit) => hits.push(hit));
+  });
   hits.sort((a, b) => a.distance - b.distance);
   return hits[0] || null;
 }
@@ -1708,9 +1815,9 @@ canvas.addEventListener("pointerdown", (e) => {
   if (busy) return;
   const hit = pick(e);
   pointerDown = { x: e.clientX, y: e.clientY, hit };
-  if (hit && e.button === 0) {
+  if (hit && e.button === 0 && hit.object.userData.part !== "home") {
     const a = actors[hit.object.userData.index];
-    if (a.nestedIn == null) {
+    if (a && a.nestedIn == null) {
       dragging = a;
       controls.enabled = false;
       raycaster.setFromCamera(pointer, camera);
@@ -1744,6 +1851,18 @@ canvas.addEventListener("pointerup", (e) => {
 
   if (!moved && pointerDown?.hit) {
     const { index, part } = pointerDown.hit.object.userData;
+    if (part === "home") {
+      selected = index;
+      const doll = actors[index];
+      if (doll && doll.nestedIn == null) {
+        doll.goalYaw = homeActors[index] ? yawToward(doll.pos, homeActors[index].pos) : doll.goalYaw;
+        doll.flourish = { t: 0, dur: 0.7, kind: personaOf(index).motion };
+        audio.chime(index);
+      }
+      setStatus();
+      pointerDown = null;
+      return;
+    }
     const doll = actors[index];
     selected = index;
     if (doll.nestedIn != null) takeOut(index);
@@ -1776,6 +1895,7 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "u" || e.key === "U") unpackAll();
   if (e.key === "m" || e.key === "M") toggleMute();
   if (e.key === "h" || e.key === "H") frameHome();
+  if (e.key === "g" || e.key === "G") goHome();
   if (e.key >= "1" && e.key <= "5") {
     selected = Number(e.key) - 1;
     setStatus();
@@ -1794,6 +1914,7 @@ document.getElementById("btn-open").addEventListener("click", () => { if (!busy)
 document.getElementById("btn-take").addEventListener("click", () => { if (!busy) takeNext(); });
 document.getElementById("btn-line").addEventListener("click", () => { if (!busy) lineUp(); });
 document.getElementById("btn-nest").addEventListener("click", () => { if (!busy) packAll(); });
+document.getElementById("btn-home")?.addEventListener("click", () => { if (!busy) goHome(); });
 document.getElementById("btn-mute")?.addEventListener("click", toggleMute);
 document.getElementById("btn-lang-ru")?.addEventListener("click", () => setLang("ru"));
 document.getElementById("btn-lang-en")?.addEventListener("click", () => setLang("en"));
@@ -1812,6 +1933,7 @@ function applyLang() {
     ["btn-take", "take"],
     ["btn-line", "line"],
     ["btn-nest", "nest"],
+    ["btn-home", "home"],
   ];
   map.forEach(([id, key]) => {
     const el = document.getElementById(id);
@@ -1903,6 +2025,7 @@ async function loadSet(id) {
     }
     clearActors();
     spawnActors(setCache[id]);
+    spawnHomes(id);
     applyLang();
   } finally {
     busy = false;
@@ -2060,6 +2183,10 @@ function updateActors(dt) {
     a.ring.material.opacity += (on - a.ring.material.opacity) * (1 - Math.exp(-dt * 10));
     updateAura(a, dt);
   });
+  homeActors.forEach((h) => {
+    const on = h.index === selected ? 0.88 : 0.14;
+    h.ring.material.opacity += (on - h.ring.material.opacity) * (1 - Math.exp(-dt * 8));
+  });
   const dp = dust.geometry.attributes.position.array;
   for (let i = 0; i < dustN; i++) {
     dp[i * 3 + 1] += dt * (0.6 + (i % 5) * 0.12);
@@ -2128,8 +2255,14 @@ function tick() {
 async function main() {
   applyLang();
   applyRoom(currentRoom);
-  setCache.sisters = await fetch("models/dolls.json").then((r) => r.json());
+  const [sisters, homes] = await Promise.all([
+    fetch("models/dolls.json").then((r) => r.json()),
+    fetch("models/homes.json").then((r) => r.json()),
+  ]);
+  setCache.sisters = sisters;
+  homesData = homes;
   spawnActors(setCache.sisters);
+  spawnHomes("sisters");
   applyLang();
   loading.hidden = true;
   tick();
