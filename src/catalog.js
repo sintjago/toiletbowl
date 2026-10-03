@@ -49,7 +49,7 @@ export const STYLES = [
   scene("model", "Form", "3D Porcelain", "porcelain", "Sculpted copy", "Same three-quarter lock. No orbit."),
   scene("wireframe", "Form", "Wireframe", "wireframe", "Line cage", "Same mesh, same camera."),
   scene("lowpoly", "Form", "Low-poly", "lowpoly", "Fewer facets", "Same toilet, cheaper clay."),
-  scene("voxels", "Form", "Voxels", "voxels", "Voxel bowl", "Pedestal, hollow bowl, seat, lid, tank. Same lock."),
+  scene("voxels", "Form", "Voxels", "voxels", "Voxel bowl", "Higher-res cubic toilet: stem, rim, lever, hinges. Same lock."),
   image("watercolor", "Paint", "Watercolor", "watercolor.png", "Wet paper", "Same angle, pigment blooms."),
   image("oil", "Paint", "Oil", "oil.png", "Impasto", "Same angle, thick paint."),
   image("impressionist", "Paint", "Impressionist", "impressionist.png", "Broken color", "Same angle, short dabs."),

@@ -11,23 +11,35 @@ const LID = 6;
 const SEAT = 7;
 const INNER = 8;
 const BOLT = 9;
+const PIPE = 10;
+const HINGE = 11;
 
 const PALETTE = {
   [PORCELAIN]: new THREE.Color("#fffdf8"),
-  [SHADE]: new THREE.Color("#d4cfc4"),
+  [SHADE]: new THREE.Color("#cfc8bb"),
   [HIGHLIGHT]: new THREE.Color("#ffffff"),
-  [CHROME]: new THREE.Color("#c5d0ce"),
-  [WATER]: new THREE.Color("#2a9bb8"),
-  [LID]: new THREE.Color("#f4ead8"),
-  [SEAT]: new THREE.Color("#efe8dc"),
-  [INNER]: new THREE.Color("#8aa8a8"),
-  [BOLT]: new THREE.Color("#9aa19e"),
+  [CHROME]: new THREE.Color("#d7e0de"),
+  [WATER]: new THREE.Color("#2493b0"),
+  [LID]: new THREE.Color("#f7f0e4"),
+  [SEAT]: new THREE.Color("#ebe3d6"),
+  [INNER]: new THREE.Color("#6f9092"),
+  [BOLT]: new THREE.Color("#8f9693"),
+  [PIPE]: new THREE.Color("#b7c2bf"),
+  [HINGE]: new THREE.Color("#b8b3a8"),
 };
 
-const W = 36;
-const H = 40;
-const D = 40;
-const SIZE = 0.052;
+const W = 48;
+const H = 54;
+const D = 50;
+const SIZE = 0.038;
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function smooth(t) {
+  return t * t * (3 - 2 * t);
+}
 
 function grid() {
   return Array.from({ length: H }, () =>
@@ -47,7 +59,7 @@ function put(voxels, x, y, z, kind) {
 }
 
 function ellipse(x, z, cx, cz, rx, rz) {
-  if (rx <= 0.2 || rz <= 0.2) return false;
+  if (rx <= 0.25 || rz <= 0.25) return false;
   const dx = (x - cx) / rx;
   const dz = (z - cz) / rz;
   return dx * dx + dz * dz <= 1;
@@ -82,7 +94,7 @@ function ringEllipse(voxels, y, cx, cz, rx, rz, inner, kind) {
   }
 }
 
-function roundedBox(voxels, x0, y0, z0, x1, y1, z1, kind, round = 1.6) {
+function roundedBox(voxels, x0, y0, z0, x1, y1, z1, kind, round = 2) {
   const cx = (x0 + x1) / 2;
   const cz = (z0 + z1) / 2;
   const rx = (x1 - x0) / 2;
@@ -90,97 +102,151 @@ function roundedBox(voxels, x0, y0, z0, x1, y1, z1, kind, round = 1.6) {
   for (let y = y0; y <= y1; y += 1) {
     for (let z = z0; z <= z1; z += 1) {
       for (let x = x0; x <= x1; x += 1) {
-        const ex = Math.max(0, Math.abs(x - cx) - (rx - round));
-        const ez = Math.max(0, Math.abs(z - cz) - (rz - round));
+        const ex = Math.max(0, Math.abs(x - cx) - Math.max(rx - round, 0));
+        const ez = Math.max(0, Math.abs(z - cz) - Math.max(rz - round, 0));
         if (ex * ex + ez * ez <= round * round) put(voxels, x, y, z, kind);
       }
     }
   }
 }
 
+function fillBall(voxels, cx, cy, cz, r, kind) {
+  const r2 = r * r;
+  for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y += 1) {
+    for (let z = Math.floor(cz - r); z <= Math.ceil(cz + r); z += 1) {
+      for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x += 1) {
+        const dx = x - cx;
+        const dy = y - cy;
+        const dz = z - cz;
+        if (dx * dx + dy * dy + dz * dz <= r2) put(voxels, x, y, z, kind);
+      }
+    }
+  }
+}
+
+function profileAt(y, keys) {
+  if (y <= keys[0].y) return keys[0];
+  const last = keys[keys.length - 1];
+  if (y >= last.y) return last;
+  for (let i = 0; i < keys.length - 1; i += 1) {
+    const a = keys[i];
+    const b = keys[i + 1];
+    if (y >= a.y && y <= b.y) {
+      const t = smooth((y - a.y) / Math.max(b.y - a.y, 0.001));
+      return {
+        rx: lerp(a.rx, b.rx, t),
+        rz: lerp(a.rz, b.rz, t),
+        inner: lerp(a.inner, b.inner, t),
+        cz: lerp(a.cz, b.cz, t),
+      };
+    }
+  }
+  return last;
+}
+
 function buildToilet() {
   const voxels = grid();
   const cx = (W - 1) / 2;
-  const bowlZ = 23.2;
-  const tankZ0 = 3;
-  const tankZ1 = 10;
+  const bowlZ = 29.4;
+  const tankZ0 = 4;
+  const tankZ1 = 13;
 
-  for (let y = 0; y <= 1; y += 1) {
-    fillEllipse(voxels, y, cx, bowlZ - 1.2, 8.4 - y * 0.3, 9.6 - y * 0.2, PORCELAIN);
-  }
-  put(voxels, cx - 6, 0, bowlZ + 5, BOLT);
-  put(voxels, cx + 6, 0, bowlZ + 5, BOLT);
-  put(voxels, cx - 6, 0, bowlZ - 7, BOLT);
-  put(voxels, cx + 6, 0, bowlZ - 7, BOLT);
+  const bowl = [
+    { y: 0, rx: 11.4, rz: 13.0, inner: 0, cz: bowlZ - 1.6 },
+    { y: 2, rx: 10.6, rz: 12.2, inner: 0, cz: bowlZ - 1.6 },
+    { y: 6, rx: 6.5, rz: 7.4, inner: 0, cz: bowlZ - 2.2 },
+    { y: 11, rx: 7.6, rz: 8.4, inner: 0, cz: bowlZ - 1.4 },
+    { y: 15, rx: 11.8, rz: 11.2, inner: 0.28, cz: bowlZ },
+    { y: 19, rx: 14.6, rz: 13.4, inner: 0.6, cz: bowlZ },
+    { y: 23, rx: 16.0, rz: 14.6, inner: 0.7, cz: bowlZ },
+    { y: 25, rx: 16.4, rz: 15.0, inner: 0.73, cz: bowlZ },
+  ];
 
-  for (let y = 2; y <= 6; y += 1) {
-    const t = (y - 2) / 4;
-    fillEllipse(voxels, y, cx, bowlZ - 1.6, 5.1 + t * 1.1, 6.2 + t * 1.4, PORCELAIN);
-  }
-
-  for (let y = 3; y <= 8; y += 1) {
-    fillEllipse(voxels, y, cx, bowlZ - 6.2, 3.6, 5.2, PORCELAIN);
-  }
-
-  for (let y = 6; y <= 17; y += 1) {
-    const t = (y - 6) / 11;
-    let orx;
-    let orz;
-    let inner;
-    if (t < 0.22) {
-      orx = 6.2 + t * 18;
-      orz = 6.4 + t * 16;
-      inner = 0;
-    } else if (t < 0.72) {
-      orx = 10.2 + (t - 0.22) * 3.6;
-      orz = 9.9 + (t - 0.22) * 3.2;
-      inner = 0.58 + (t - 0.22) * 0.12;
+  for (let y = 0; y <= 25; y += 1) {
+    const p = profileAt(y, bowl);
+    if (p.inner < 0.08) {
+      fillEllipse(voxels, y, cx, p.cz, p.rx, p.rz, y === 0 ? SHADE : PORCELAIN);
     } else {
-      orx = 12.1;
-      orz = 11.4;
-      inner = 0.68;
-    }
-    if (inner <= 0.05) {
-      fillEllipse(voxels, y, cx, bowlZ, orx, orz, PORCELAIN);
-    } else {
-      ringEllipse(voxels, y, cx, bowlZ, orx, orz, inner, PORCELAIN);
-      ringEllipse(voxels, y, cx, bowlZ, orx * inner + 0.9, orz * inner + 0.8, 0.55, INNER);
+      ringEllipse(voxels, y, cx, p.cz, p.rx, p.rz, p.inner, PORCELAIN);
+      ringEllipse(
+        voxels,
+        y,
+        cx,
+        p.cz,
+        p.rx * p.inner + 1.1,
+        p.rz * p.inner + 1.0,
+        0.52,
+        INNER,
+      );
     }
   }
 
-  ringEllipse(voxels, 17, cx, bowlZ, 12.4, 11.7, 0.7, HIGHLIGHT);
-  ringEllipse(voxels, 16, cx, bowlZ, 12.0, 11.3, 0.78, SHADE);
+  ringEllipse(voxels, 0, cx, bowlZ - 1.6, 11.6, 13.2, 0.82, SHADE);
+  put(voxels, cx - 8, 0, bowlZ + 7, BOLT);
+  put(voxels, cx + 8, 0, bowlZ + 7, BOLT);
+  put(voxels, cx - 8, 1, bowlZ + 7, BOLT);
+  put(voxels, cx + 8, 1, bowlZ + 7, BOLT);
+  put(voxels, cx - 8, 0, bowlZ - 9, BOLT);
+  put(voxels, cx + 8, 0, bowlZ - 9, BOLT);
+  put(voxels, cx - 8, 1, bowlZ - 9, BOLT);
+  put(voxels, cx + 8, 1, bowlZ - 9, BOLT);
 
-  for (let y = 10; y <= 13; y += 1) {
-    fillEllipse(voxels, y, cx, bowlZ + 0.2, 6.4, 6.0, WATER);
-  }
-  fillEllipse(voxels, 9, cx, bowlZ + 0.2, 5.2, 4.8, INNER);
-
-  ringEllipse(voxels, 18, cx, bowlZ + 0.15, 11.6, 10.8, 0.62, SEAT);
-  ringEllipse(voxels, 18, cx, bowlZ + 0.15, 11.2, 10.4, 0.7, SHADE);
-
-  fillEllipse(voxels, 19, cx, bowlZ - 0.2, 11.8, 11.0, LID);
-  fillEllipse(voxels, 20, cx, bowlZ - 0.35, 11.4, 10.6, LID);
-  fillEllipse(voxels, 20, cx, bowlZ - 0.35, 8.2, 7.4, HIGHLIGHT);
-
-  roundedBox(voxels, 8, 16, tankZ0, 27, 33, tankZ1, PORCELAIN, 1.8);
-  roundedBox(voxels, 7, 34, tankZ0 - 1, 28, 35, tankZ1 + 1, SHADE, 1.4);
-  roundedBox(voxels, 8, 34, tankZ0, 27, 34, tankZ1, HIGHLIGHT, 1.6);
-  for (let z = tankZ0 + 1; z <= tankZ1 - 1; z += 1) {
-    put(voxels, 8, 22, z, SHADE);
-    put(voxels, 27, 22, z, SHADE);
+  for (let y = 4; y <= 12; y += 1) {
+    fillEllipse(voxels, y, cx, bowlZ - 8.4, 4.2, 6.2, PORCELAIN);
   }
 
-  for (let x = 10; x <= 14; x += 1) put(voxels, x, 29, tankZ1 + 1, CHROME);
-  put(voxels, 10, 28, tankZ1 + 1, CHROME);
-  put(voxels, 10, 30, tankZ1 + 1, CHROME);
-  put(voxels, 9, 29, tankZ1 + 1, CHROME);
-  put(voxels, 10, 29, tankZ1, CHROME);
-  put(voxels, 15, 29, tankZ1 + 1, CHROME);
+  ringEllipse(voxels, 25, cx, bowlZ, 16.8, 15.3, 0.74, HIGHLIGHT);
+  ringEllipse(voxels, 24, cx, bowlZ, 16.2, 14.8, 0.8, SHADE);
 
-  for (let y = 16; y <= 19; y += 1) {
-    fillEllipse(voxels, y, cx, 11.8, 5.2, 3.8, PORCELAIN);
+  for (let y = 17; y <= 20; y += 1) {
+    fillEllipse(voxels, y, cx, bowlZ + 0.3, 8.2, 7.6, WATER);
   }
+  fillEllipse(voxels, 16, cx, bowlZ + 0.3, 6.6, 6.0, INNER);
+
+  ringEllipse(voxels, 26, cx, bowlZ + 0.2, 15.4, 14.0, 0.6, SEAT);
+  ringEllipse(voxels, 27, cx, bowlZ + 0.15, 15.0, 13.6, 0.63, SEAT);
+  ringEllipse(voxels, 26, cx, bowlZ + 0.2, 14.6, 13.2, 0.72, SHADE);
+
+  fillEllipse(voxels, 28, cx, bowlZ - 0.15, 15.6, 14.4, LID);
+  fillEllipse(voxels, 29, cx, bowlZ - 0.3, 15.2, 14.0, LID);
+  fillEllipse(voxels, 30, cx, bowlZ - 0.45, 14.4, 13.2, LID);
+  fillEllipse(voxels, 30, cx, bowlZ - 0.45, 10.4, 9.4, HIGHLIGHT);
+
+  roundedBox(voxels, 10, 23, tankZ0, 37, 46, tankZ1, PORCELAIN, 2.4);
+  roundedBox(voxels, 11, 24, tankZ0 + 1, 36, 45, tankZ1 - 1, PORCELAIN, 1.8);
+  roundedBox(voxels, 9, 47, tankZ0 - 1, 38, 48, tankZ1 + 1, SHADE, 2.0);
+  roundedBox(voxels, 10, 47, tankZ0, 37, 47, tankZ1, HIGHLIGHT, 2.2);
+  for (let z = tankZ0 + 2; z <= tankZ1 - 2; z += 1) {
+    put(voxels, 10, 34, z, SHADE);
+    put(voxels, 37, 34, z, SHADE);
+  }
+
+  for (let y = 23; y <= 28; y += 1) {
+    fillEllipse(voxels, y, cx, 15.2, 6.6, 4.6, PORCELAIN);
+  }
+
+  put(voxels, cx - 5, 27, 16, HINGE);
+  put(voxels, cx - 5, 28, 16, HINGE);
+  put(voxels, cx - 5, 27, 17, HINGE);
+  put(voxels, cx + 5, 27, 16, HINGE);
+  put(voxels, cx + 5, 28, 16, HINGE);
+  put(voxels, cx + 5, 27, 17, HINGE);
+
+  const handleY = 40;
+  const handleZ = tankZ1 + 1;
+  for (let x = 12; x <= 20; x += 1) {
+    put(voxels, x, handleY, handleZ, CHROME);
+    put(voxels, x, handleY, handleZ + 1, CHROME);
+  }
+  put(voxels, 20, handleY, tankZ1, CHROME);
+  put(voxels, 20, handleY - 1, handleZ, CHROME);
+  put(voxels, 20, handleY + 1, handleZ, CHROME);
+  fillBall(voxels, 12, handleY, handleZ + 0.5, 1.35, CHROME);
+
+  for (let y = 1; y <= 24; y += 1) put(voxels, 11, y, 6, PIPE);
+  for (let z = 6; z <= 8; z += 1) put(voxels, 11, 24, z, PIPE);
+  put(voxels, 11, 1, 6, BOLT);
+  put(voxels, 11, 2, 6, PIPE);
 
   return voxels;
 }
@@ -214,22 +280,22 @@ function collect(voxels, kind) {
 
 function toneFor(voxels, cell, kind) {
   const { x, y, z } = cell;
-  const ao = 0.62 + (neighborCount(voxels, x, y, z) / 6) * 0.38;
-  const dither = 0.94 + ((x * 17 + y * 31 + z * 13) % 8) * 0.01;
+  const ao = 0.56 + (neighborCount(voxels, x, y, z) / 6) * 0.44;
+  const dither = 0.95 + ((x * 17 + y * 31 + z * 13) % 7) * 0.01;
   const color = PALETTE[kind].clone().multiplyScalar(ao * dither);
-  if (kind === WATER) color.multiplyScalar(0.85 + ((x + z) % 3) * 0.08);
+  if (kind === WATER) color.multiplyScalar(0.82 + ((x + z) % 4) * 0.07);
   return color;
 }
 
 function instancedGroup(voxels, cells, kind, origin) {
   if (!cells.length) return null;
-  const geo = new THREE.BoxGeometry(SIZE * 0.9, SIZE * 0.9, SIZE * 0.9);
+  const geo = new THREE.BoxGeometry(SIZE * 0.92, SIZE * 0.92, SIZE * 0.92);
   const mat = new THREE.MeshStandardMaterial({
     color: "#ffffff",
-    roughness: kind === WATER ? 0.12 : kind === CHROME ? 0.22 : 0.38,
-    metalness: kind === CHROME ? 0.82 : kind === WATER ? 0.12 : 0.04,
+    roughness: kind === WATER ? 0.1 : kind === CHROME || kind === PIPE ? 0.2 : 0.36,
+    metalness: kind === CHROME || kind === PIPE ? 0.84 : kind === WATER ? 0.14 : 0.045,
     transparent: kind === WATER,
-    opacity: kind === WATER ? 0.82 : 1,
+    opacity: kind === WATER ? 0.84 : 1,
   });
   const mesh = new THREE.InstancedMesh(geo, mat, cells.length);
   mesh.castShadow = true;
@@ -247,29 +313,7 @@ function instancedGroup(voxels, cells, kind, origin) {
   return mesh;
 }
 
-function hingeOf(cells) {
-  if (!cells.length) return new THREE.Vector3();
-  let minZ = Infinity;
-  cells.forEach((cell) => {
-    if (cell.z < minZ) minZ = cell.z;
-  });
-  const back = cells.filter((cell) => cell.z <= minZ + 1);
-  const sum = back.reduce(
-    (acc, cell) => {
-      const w = worldPos(cell.x, cell.y, cell.z);
-      acc.x += w.x;
-      acc.y += w.y;
-      acc.z += w.z;
-      return acc;
-    },
-    { x: 0, y: 0, z: 0 },
-  );
-  const n = back.length;
-  return new THREE.Vector3(sum.x / n, sum.y / n, sum.z / n);
-}
-
-function centroid(cells) {
-  if (!cells.length) return new THREE.Vector3();
+function averageWorld(cells) {
   const sum = cells.reduce(
     (acc, cell) => {
       const w = worldPos(cell.x, cell.y, cell.z);
@@ -280,7 +324,31 @@ function centroid(cells) {
     },
     { x: 0, y: 0, z: 0 },
   );
-  return new THREE.Vector3(sum.x / cells.length, sum.y / cells.length, sum.z / cells.length);
+  const n = cells.length;
+  return new THREE.Vector3(sum.x / n, sum.y / n, sum.z / n);
+}
+
+function hingeOf(cells) {
+  if (!cells.length) return new THREE.Vector3();
+  let minZ = Infinity;
+  cells.forEach((cell) => {
+    if (cell.z < minZ) minZ = cell.z;
+  });
+  return averageWorld(cells.filter((cell) => cell.z <= minZ + 2));
+}
+
+function handleMountOf(cells) {
+  if (!cells.length) return new THREE.Vector3();
+  let maxX = -Infinity;
+  cells.forEach((cell) => {
+    if (cell.x > maxX) maxX = cell.x;
+  });
+  return averageWorld(cells.filter((cell) => cell.x >= maxX - 1));
+}
+
+function centroid(cells) {
+  if (!cells.length) return new THREE.Vector3();
+  return averageWorld(cells);
 }
 
 export function mountVoxels(root, { angleId, flush }) {
@@ -294,10 +362,10 @@ export function mountVoxels(root, { angleId, flush }) {
   const seatCells = collect(voxels, SEAT);
   const handleCells = collect(voxels, CHROME);
   const waterCells = collect(voxels, WATER);
-  const bodyKinds = [PORCELAIN, SHADE, HIGHLIGHT, INNER, BOLT];
+  const bodyKinds = [PORCELAIN, SHADE, HIGHLIGHT, INNER, BOLT, PIPE, HINGE];
 
   const lidAnchor = hingeOf(lidCells);
-  const handleAnchor = centroid(handleCells);
+  const handleAnchor = handleMountOf(handleCells);
   const waterAnchor = centroid(waterCells);
 
   lidPivot.position.copy(lidAnchor);
@@ -325,15 +393,20 @@ export function mountVoxels(root, { angleId, flush }) {
     flush,
     onFrame: (now) => {
       const pose = flush.sample(now);
-      handlePivot.rotation.z = pose.handle * 0.95;
-      lidPivot.rotation.x = -pose.lid * 1.35;
+      handlePivot.rotation.z = pose.handle * 1.05;
+      lidPivot.rotation.x = -pose.lid * 1.48;
       waterGroup.visible = pose.lid > 0.08;
       waterGroup.rotation.y = pose.swirl;
-      waterGroup.scale.setScalar(0.88 + pose.level * 0.12);
+      waterGroup.scale.setScalar(0.86 + pose.level * 0.14);
       group.position.x = pose.shake * 0.01;
     },
   });
-  group.position.y = 0.012;
+
+  const rim = new THREE.DirectionalLight("#fff4e6", 0.42);
+  rim.position.set(-1.8, 3.4, 4.2);
+  scene.add(rim);
+
+  group.position.y = 0.01;
   scene.add(group);
   return dispose;
 }

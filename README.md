@@ -9,7 +9,7 @@ Style and camera are separate. Switching a style keeps the three-quarter closed-
 - **1 angle:** three-quarter, lid closed
 - **59 styles:** photo, photo-derived filters, locked 3D copies, and painted/printed/crafted restyles of the same picture, plus cubism and isometric as best-effort extras
 - **Flush:** every style plays the same handle / lid / swirl / refill. Click the bowl, press Flush, or hit Space. The lid hinges open from the tank; the seat stays down so you can see into the bowl.
-- **Voxels:** a sculpted cubic toilet — pedestal, hollow bowl, seat ring, lid, tank, chrome handle — not a stack of boxes.
+- **Voxels:** a higher-res cubic toilet — foot, stem, hollow bowl, seat ring, lid, tank, lever, hinges, supply pipe. Same three-quarter lock.
 
 ## Run
 
