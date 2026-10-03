@@ -19,7 +19,7 @@ const PALETTE = {
   [SHADE]: new THREE.Color("#cfc8bb"),
   [HIGHLIGHT]: new THREE.Color("#ffffff"),
   [CHROME]: new THREE.Color("#eef3f2"),
-  [WATER]: new THREE.Color("#2493b0"),
+  [WATER]: new THREE.Color("#1fa8c2"),
   [LID]: new THREE.Color("#f7f0e4"),
   [SEAT]: new THREE.Color("#ebe3d6"),
   [INNER]: new THREE.Color("#6f9092"),

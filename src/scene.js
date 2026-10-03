@@ -1,7 +1,16 @@
 import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { angleById } from "./catalog.js";
 
-function paintTiles({ tile, grout, cols, rows, inset = 5 }) {
+function shadeTile(hex, amount) {
+  const n = Number.parseInt(hex.slice(1), 16);
+  const r = Math.min(255, Math.round(((n >> 16) & 255) * amount));
+  const g = Math.min(255, Math.round(((n >> 8) & 255) * amount));
+  const b = Math.min(255, Math.round((n & 255) * amount));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function paintTiles({ tile, grout, cols, rows, inset, offset = false }) {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 256;
@@ -11,10 +20,11 @@ function paintTiles({ tile, grout, cols, rows, inset = 5 }) {
   const tw = 256 / cols;
   const th = 256 / rows;
   for (let y = 0; y < rows; y += 1) {
-    for (let x = 0; x < cols; x += 1) {
-      const shade = 1 - ((x * 13 + y * 29) % 5) * 0.012;
-      ctx.fillStyle = shadeTile(tile, shade);
-      ctx.fillRect(x * tw + inset / 2, y * th + inset / 2, tw - inset, th - inset);
+    const shift = offset && y % 2 ? tw / 2 : 0;
+    for (let x = -1; x <= cols; x += 1) {
+      const tone = 1 - ((x * 11 + y * 19) % 4) * 0.01;
+      ctx.fillStyle = shadeTile(tile, tone);
+      ctx.fillRect(x * tw + shift + inset / 2, y * th + inset / 2, tw - inset, th - inset);
     }
   }
   const texture = new THREE.CanvasTexture(canvas);
@@ -25,39 +35,32 @@ function paintTiles({ tile, grout, cols, rows, inset = 5 }) {
   return texture;
 }
 
-function shadeTile(hex, amount) {
-  const n = Number.parseInt(hex.slice(1), 16);
-  const r = Math.min(255, Math.round(((n >> 16) & 255) * amount));
-  const g = Math.min(255, Math.round(((n >> 8) & 255) * amount));
-  const b = Math.min(255, Math.round((n & 255) * amount));
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
 function floorTexture() {
   const texture = paintTiles({
-    tile: "#c3d4cc",
-    grout: "#4f6a63",
+    tile: "#e7f3ee",
+    grout: "#c8d8d1",
     cols: 4,
     rows: 4,
-    inset: 7,
+    inset: 4,
   });
-  texture.repeat.set(7, 7);
+  texture.repeat.set(8, 8);
   return texture;
 }
 
 function wallTexture() {
   const texture = paintTiles({
-    tile: "#dceae3",
-    grout: "#5d7770",
-    cols: 3,
+    tile: "#e9f5f0",
+    grout: "#c5d6cf",
+    cols: 2,
     rows: 6,
-    inset: 5,
+    inset: 4,
+    offset: true,
   });
-  texture.repeat.set(5, 3.2);
+  texture.repeat.set(4, 3);
   return texture;
 }
 
-export function createScene(root, { angleId, background = "#b7cdc4", flush, onFrame } = {}) {
+export function createScene(root, { angleId, background = "#e7f3ee", flush, onFrame } = {}) {
   const angle = angleById(angleId);
   const panel = document.createElement("div");
   panel.className = "panel";
@@ -77,21 +80,22 @@ export function createScene(root, { angleId, background = "#b7cdc4", flush, onFr
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.88;
+  renderer.toneMappingExposure = 1.05;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(background);
-  scene.fog = new THREE.Fog(background, 8, 18);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
 
-  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 80);
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 80);
   camera.position.set(...angle.camera.position);
   camera.lookAt(...angle.camera.target);
 
-  const hemi = new THREE.HemisphereLight("#f4fff8", "#6d8a82", 0.72);
+  const hemi = new THREE.HemisphereLight("#ffffff", "#9eb8b0", 0.85);
   scene.add(hemi);
 
-  const key = new THREE.DirectionalLight("#fff6ea", 1.15);
-  key.position.set(3.4, 6.2, 2.8);
+  const key = new THREE.DirectionalLight("#fff8ef", 1.35);
+  key.position.set(2.8, 5.4, 3.2);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
   key.shadow.camera.near = 1;
@@ -102,26 +106,21 @@ export function createScene(root, { angleId, background = "#b7cdc4", flush, onFr
   key.shadow.camera.bottom = -4;
   scene.add(key);
 
-  const fill = new THREE.DirectionalLight("#c5ddd4", 0.38);
-  fill.position.set(-3.2, 2.2, -1.4);
+  const fill = new THREE.DirectionalLight("#d7ebe4", 0.45);
+  fill.position.set(-3.4, 2.4, -1.2);
   scene.add(fill);
 
-  const rim = new THREE.DirectionalLight("#ffe7c8", 0.4);
-  rim.position.set(-1.8, 3.2, 4.4);
+  const rim = new THREE.DirectionalLight("#ffe9cc", 0.35);
+  rim.position.set(-2.2, 3.4, 4.2);
   scene.add(rim);
 
   const floorMat = new THREE.MeshStandardMaterial({
     map: floorTexture(),
-    roughness: 0.88,
-    metalness: 0.03,
+    roughness: 0.82,
+    metalness: 0.02,
   });
   const wallMat = new THREE.MeshStandardMaterial({
     map: wallTexture(),
-    roughness: 0.78,
-    metalness: 0.02,
-  });
-  const boardMat = new THREE.MeshStandardMaterial({
-    color: "#e8efe8",
     roughness: 0.7,
     metalness: 0.02,
   });
@@ -132,22 +131,9 @@ export function createScene(root, { angleId, background = "#b7cdc4", flush, onFr
   scene.add(floor);
 
   const back = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), wallMat);
-  back.position.set(0, 3, -2.45);
+  back.position.set(0, 3, -2.2);
   back.receiveShadow = true;
   scene.add(back);
-
-  const side = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), wallMat);
-  side.position.set(-2.7, 3, 0);
-  side.rotation.y = Math.PI / 2;
-  side.receiveShadow = true;
-  scene.add(side);
-
-  const base = new THREE.Mesh(new THREE.BoxGeometry(12, 0.12, 0.06), boardMat);
-  base.position.set(0, 0.06, -2.42);
-  scene.add(base);
-  const sideBase = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 12), boardMat);
-  sideBase.position.set(-2.67, 0.06, 0);
-  scene.add(sideBase);
 
   const resize = () => {
     const width = panel.clientWidth;
@@ -173,6 +159,7 @@ export function createScene(root, { angleId, background = "#b7cdc4", flush, onFr
     cancelAnimationFrame(frame);
     observer.disconnect();
     renderer.dispose();
+    pmrem.dispose();
     panel.remove();
   };
 
@@ -180,13 +167,13 @@ export function createScene(root, { angleId, background = "#b7cdc4", flush, onFr
 }
 
 export const porcelain = {
-  color: "#fffdf8",
-  roughness: 0.16,
+  color: "#ffffff",
+  roughness: 0.12,
   metalness: 0.02,
 };
 
 export const chrome = {
-  color: "#eef3f2",
-  roughness: 0.22,
-  metalness: 0.52,
+  color: "#f2f5f6",
+  roughness: 0.16,
+  metalness: 0.85,
 };
