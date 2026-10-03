@@ -18,7 +18,7 @@ const PALETTE = {
   [PORCELAIN]: new THREE.Color("#fffdf8"),
   [SHADE]: new THREE.Color("#cfc8bb"),
   [HIGHLIGHT]: new THREE.Color("#ffffff"),
-  [CHROME]: new THREE.Color("#d7e0de"),
+  [CHROME]: new THREE.Color("#eef3f2"),
   [WATER]: new THREE.Color("#2493b0"),
   [LID]: new THREE.Color("#f7f0e4"),
   [SEAT]: new THREE.Color("#ebe3d6"),
@@ -241,7 +241,7 @@ function buildToilet() {
   put(voxels, 20, handleY, tankZ1, CHROME);
   put(voxels, 20, handleY - 1, handleZ, CHROME);
   put(voxels, 20, handleY + 1, handleZ, CHROME);
-  fillBall(voxels, 12, handleY, handleZ + 0.5, 1.35, CHROME);
+  fillBall(voxels, 11.4, handleY, handleZ + 0.6, 1.7, CHROME);
 
   for (let y = 1; y <= 24; y += 1) put(voxels, 11, y, 6, PIPE);
   for (let z = 6; z <= 8; z += 1) put(voxels, 11, 24, z, PIPE);
@@ -292,8 +292,8 @@ function instancedGroup(voxels, cells, kind, origin) {
   const geo = new THREE.BoxGeometry(SIZE * 0.92, SIZE * 0.92, SIZE * 0.92);
   const mat = new THREE.MeshStandardMaterial({
     color: "#ffffff",
-    roughness: kind === WATER ? 0.1 : kind === CHROME || kind === PIPE ? 0.2 : 0.36,
-    metalness: kind === CHROME || kind === PIPE ? 0.84 : kind === WATER ? 0.14 : 0.045,
+    roughness: kind === WATER ? 0.1 : kind === CHROME ? 0.32 : kind === PIPE ? 0.28 : 0.36,
+    metalness: kind === CHROME ? 0.48 : kind === PIPE ? 0.55 : kind === WATER ? 0.14 : 0.045,
     transparent: kind === WATER,
     opacity: kind === WATER ? 0.84 : 1,
   });
