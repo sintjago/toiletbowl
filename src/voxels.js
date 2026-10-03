@@ -400,7 +400,7 @@ export function mountVoxels(root, { angleId, flush }) {
     onFrame: (now) => {
       const pose = flush.sample(now);
       handlePivot.rotation.z = pose.handle * 1.05;
-      lidPivot.rotation.x = -pose.lid * 1.48;
+      lidPivot.rotation.x = -pose.lid * 1.85;
       waterGroup.visible = pose.lid > 0.08;
       waterGroup.rotation.y = pose.swirl;
       waterGroup.scale.setScalar(0.86 + pose.level * 0.14);

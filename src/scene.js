@@ -37,30 +37,30 @@ function paintTiles({ tile, grout, cols, rows, inset, offset = false }) {
 
 function floorTexture() {
   const texture = paintTiles({
-    tile: "#e7f3ee",
-    grout: "#c8d8d1",
+    tile: "#cfe0d8",
+    grout: "#6d8b83",
     cols: 4,
     rows: 4,
-    inset: 4,
+    inset: 6,
   });
-  texture.repeat.set(8, 8);
+  texture.repeat.set(7, 7);
   return texture;
 }
 
 function wallTexture() {
   const texture = paintTiles({
-    tile: "#e9f5f0",
-    grout: "#c5d6cf",
+    tile: "#d7e8e0",
+    grout: "#7a9690",
     cols: 2,
     rows: 6,
-    inset: 4,
+    inset: 5,
     offset: true,
   });
   texture.repeat.set(4, 3);
   return texture;
 }
 
-export function createScene(root, { angleId, background = "#e7f3ee", flush, onFrame } = {}) {
+export function createScene(root, { angleId, background = "#b9cfc6", flush, onFrame } = {}) {
   const angle = angleById(angleId);
   const panel = document.createElement("div");
   panel.className = "panel";
@@ -80,21 +80,22 @@ export function createScene(root, { angleId, background = "#e7f3ee", flush, onFr
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 0.82;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(background);
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.28;
 
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 80);
   camera.position.set(...angle.camera.position);
   camera.lookAt(...angle.camera.target);
 
-  const hemi = new THREE.HemisphereLight("#ffffff", "#9eb8b0", 0.85);
+  const hemi = new THREE.HemisphereLight("#f4fff8", "#6d8a82", 0.55);
   scene.add(hemi);
 
-  const key = new THREE.DirectionalLight("#fff8ef", 1.35);
+  const key = new THREE.DirectionalLight("#fff8ef", 1.15);
   key.position.set(2.8, 5.4, 3.2);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);

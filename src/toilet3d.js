@@ -112,7 +112,7 @@ function waterTexture() {
 
 export function applyToiletPose(parts, pose) {
   parts.handlePivot.rotation.z = pose.handle * 0.85;
-  parts.lidPivot.rotation.x = -pose.lid * 2.42;
+  parts.lidPivot.rotation.x = -pose.lid * 2.95;
   parts.seatPivot.rotation.x = 0;
   parts.water.visible = pose.lid > 0.05;
   parts.water.rotation.z = pose.swirl;
@@ -233,10 +233,10 @@ export function createToilet({
 
   const seatPivot = new THREE.Group();
   seatPivot.position.set(0, hingeY, hingeZ);
-  const seat = shade(new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.05, 12, radial), seatMat));
+  const seat = shade(new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.042, 12, radial), seatMat));
   seat.rotation.x = Math.PI / 2;
   seat.position.set(0, 0.016, 0.5);
-  seat.scale.set(1.04, OVAL_Z, 1);
+  seat.scale.set(1.02, OVAL_Z, 1);
   seatPivot.add(seat);
   const seatLine = new THREE.Mesh(
     new THREE.TorusGeometry(0.545, 0.006, 8, radial),
@@ -254,7 +254,7 @@ export function createToilet({
   lidPivot.position.set(0, hingeY + 0.028, hingeZ - 0.02);
   const lid = shade(new THREE.Mesh(new THREE.LatheGeometry(lidProfile(), radial), bodyMat));
   lid.position.set(0, 0.01, 0.5);
-  lid.scale.set(1.08, 1, OVAL_Z * 1.04);
+  lid.scale.set(1.02, 1, OVAL_Z * 0.98);
   lidPivot.add(lid);
   group.add(lidPivot);
 

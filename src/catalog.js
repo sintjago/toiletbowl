@@ -2,7 +2,7 @@ export const ANGLES = [
   {
     id: "three-quarter",
     label: "Three-quarter",
-    camera: { position: [2.15, 1.62, 3.35], target: [0.05, 0.88, 0.08] },
+    camera: { position: [2.45, 1.48, 3.05], target: [0.02, 0.86, 0.1] },
   },
 ];
 
