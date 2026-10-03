@@ -21,7 +21,7 @@ const PERSONAS = [
     },
     ring: 0xe4b23c,
     aura: 0xc62828,
-    auraSize: 0.55,
+    auraSize: 1.05,
     motion: "regal",
     glance: "daughters",
     glanceEvery: [4.2, 7.0],
@@ -43,7 +43,7 @@ const PERSONAS = [
     },
     ring: 0x82b1ff,
     aura: 0xe8f4ff,
-    auraSize: 0.42,
+    auraSize: 0.85,
     motion: "glide",
     glance: "window",
     glanceEvery: [3.0, 5.2],
@@ -65,7 +65,7 @@ const PERSONAS = [
     },
     ring: 0xf9a825,
     aura: 0xffe082,
-    auraSize: 0.48,
+    auraSize: 0.95,
     motion: "sunny",
     glance: "lamp",
     glanceEvery: [1.8, 3.4],
@@ -87,7 +87,7 @@ const PERSONAS = [
     },
     ring: 0xec407a,
     aura: 0xff8a80,
-    auraSize: 0.4,
+    auraSize: 0.8,
     motion: "fidget",
     glance: "sisters",
     glanceEvery: [0.7, 1.5],
@@ -109,7 +109,7 @@ const PERSONAS = [
     },
     ring: 0xf8bbd0,
     aura: 0xff80ab,
-    auraSize: 0.36,
+    auraSize: 0.7,
     motion: "wobble",
     glance: "camera",
     glanceEvery: [1.0, 2.0],
@@ -1406,32 +1406,32 @@ function updateActors(dt) {
     let extraYaw = 0;
     const idle = live * (dragging === a ? 0.15 : 1);
     if (p.motion === "regal") {
-      extraYaw = Math.sin(t * 0.32 + a.index) * 0.05 * idle;
-      pitch = Math.sin(t * 0.45) * 0.03 * idle;
-      oy += Math.sin(t * 0.5) * 0.1 * idle;
-      if (a.flourish && a.flourish.t > 0) pitch += Math.sin(Math.min(1, a.flourish.t / a.flourish.dur) * Math.PI) * 0.28;
+      extraYaw = Math.sin(t * 0.4 + a.index) * 0.16 * idle;
+      pitch = 0.06 + Math.sin(t * 0.7) * 0.16 * idle;
+      oy += Math.sin(t * 0.55) * 0.4 * idle;
+      if (a.flourish && a.flourish.t > 0) pitch += Math.sin(Math.min(1, a.flourish.t / a.flourish.dur) * Math.PI) * 0.42;
     } else if (p.motion === "glide") {
-      const g = t * 0.7 + a.index;
-      ox = Math.sin(g) * 2.1 * idle;
-      oz = Math.cos(g * 0.85) * 1.3 * idle;
-      extraYaw = Math.sin(g) * 0.2 * idle;
-      roll = -Math.sin(g) * 0.1 * idle;
+      const g = t * 0.95 + a.index;
+      ox = Math.sin(g) * 6.2 * idle;
+      oz = Math.cos(g * 0.8) * 4.4 * idle;
+      extraYaw = Math.sin(g) * 0.55 * idle;
+      roll = -Math.sin(g) * 0.24 * idle;
     } else if (p.motion === "sunny") {
-      oy += Math.abs(Math.sin(t * 2.15 + a.hopPhase)) * 0.55 * idle;
+      oy += Math.abs(Math.sin(t * 2.5 + a.hopPhase)) * 2.4 * idle;
       const lampYaw = yawToward(a.pos, new THREE.Vector3(-8, 0, 14));
-      extraYaw += (lampYaw - a.yaw) * 0.15 * idle;
-      pitch = -0.06 * idle;
+      extraYaw += (lampYaw - a.yaw) * 0.55 * idle;
+      pitch = -0.18 * idle;
     } else if (p.motion === "fidget") {
-      extraYaw = Math.sin(t * 3.3 + a.hopPhase) * 0.22 * idle;
-      ox = Math.sin(t * 2.6) * 0.7 * idle;
-      oz = Math.cos(t * 3.1) * 0.5 * idle;
-      if (Math.sin(t * 2.9 + a.hopPhase) > 0.92) a.bounce = Math.max(a.bounce, 0.55 * idle);
+      extraYaw = Math.sin(t * 4.6 + a.hopPhase) * 0.7 * idle;
+      ox = Math.sin(t * 3.8) * 2.4 * idle;
+      oz = Math.cos(t * 4.2) * 1.8 * idle;
+      if (Math.sin(t * 3.4 + a.hopPhase) > 0.55) a.bounce = Math.max(a.bounce, 0.95 * idle);
       if (a.flourish && a.flourish.t > 0) extraYaw += a.flourish.t / a.flourish.dur * Math.PI * 2;
     } else {
-      oy += Math.abs(Math.sin(t * 4.6 + a.hopPhase)) * 0.85 * idle;
-      roll = Math.sin(t * 5.1) * 0.14 * idle;
-      extraYaw = Math.sin(t * 2.2) * 0.18 * idle + t * 0.15 * idle;
-      if (a.flourish && a.flourish.t > 0) extraYaw += (a.flourish.t / a.flourish.dur) * Math.PI * 2.4;
+      oy += Math.abs(Math.sin(t * 5.4 + a.hopPhase)) * 3.1 * idle;
+      roll = Math.sin(t * 6.2) * 0.28 * idle;
+      extraYaw = Math.sin(t * 2.8) * 0.4 * idle + t * 0.55 * idle;
+      if (a.flourish && a.flourish.t > 0) extraYaw += (a.flourish.t / a.flourish.dur) * Math.PI * 2.8;
     }
 
     if (a.flourish) {
