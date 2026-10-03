@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 const canvas = document.getElementById("c");
 const loading = document.getElementById("loading");
@@ -14,14 +15,17 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.18;
+renderer.toneMappingExposure = 1.26;
 
 const HOME_CAM = new THREE.Vector3(92, 48, 188);
 const HOME_TARGET = new THREE.Vector3(-2, 18, 2);
+const HOME_YAW = Math.atan2(HOME_CAM.x, HOME_CAM.z);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x100608);
 scene.fog = new THREE.FogExp2(0x100608, 0.0024);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.4, 900);
 camera.position.copy(HOME_CAM);
@@ -35,8 +39,8 @@ controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 105;
 controls.maxDistance = 420;
 
-scene.add(new THREE.HemisphereLight(0xffe0b8, 0x1a0a0c, 0.38));
-const key = new THREE.DirectionalLight(0xfff1d6, 0.42);
+scene.add(new THREE.HemisphereLight(0xffe0b8, 0x1a0a0c, 0.52));
+const key = new THREE.DirectionalLight(0xfff1d6, 0.7);
 key.position.set(50, 80, 40);
 key.castShadow = true;
 key.shadow.mapSize.set(1024, 1024);
@@ -586,8 +590,9 @@ function makeInstanced(voxels, palette, origin, shiny) {
   const mesh = new THREE.InstancedMesh(
     boxGeo,
     new THREE.MeshStandardMaterial({
-      roughness: shiny ? 0.26 : 0.58,
-      metalness: shiny ? 0.62 : 0.05,
+      roughness: shiny ? 0.28 : 0.62,
+      metalness: shiny ? 0.55 : 0.04,
+      envMapIntensity: shiny ? 0.85 : 0.28,
     }),
     voxels.length
   );
@@ -688,8 +693,8 @@ class DollActor {
     this.nestedIn = index > 0 ? index - 1 : null;
     this.pos = new THREE.Vector3();
     this.goal = new THREE.Vector3();
-    this.yaw = 0;
-    this.goalYaw = 0;
+    this.yaw = HOME_YAW;
+    this.goalYaw = HOME_YAW;
     this.flight = null;
     this.bounce = 0;
     scene.add(this.group);
@@ -862,7 +867,7 @@ function lineUp() {
     a.lidGoal = 0;
     a.flight = null;
     flyTo(a, new THREE.Vector3(lineupX(i), 0, 0), 8, 0.7);
-    a.goalYaw = 0;
+    a.goalYaw = HOME_YAW;
   });
   selected = 0;
   setStatus();
@@ -936,7 +941,7 @@ async function packAll() {
   const free = actors.filter((a) => a.nestedIn == null);
   if (free.length <= 1) {
     snapNested();
-    frameVisible();
+    frameHome();
     busy = false;
     return;
   }
