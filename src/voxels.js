@@ -248,6 +248,12 @@ function buildToilet() {
   put(voxels, 11, 1, 6, BOLT);
   put(voxels, 11, 2, 6, PIPE);
 
+  fillEllipse(voxels, 0, cx - 7, bowlZ + 8, 1.4, 1.4, SHADE);
+  fillEllipse(voxels, 0, cx + 7, bowlZ + 8, 1.4, 1.4, SHADE);
+  fillEllipse(voxels, 0, cx - 7, bowlZ - 8, 1.4, 1.4, SHADE);
+  fillEllipse(voxels, 0, cx + 7, bowlZ - 8, 1.4, 1.4, SHADE);
+  roundedBox(voxels, 17, 38, tankZ1, 22, 42, tankZ1, BOLT, 1.1);
+
   return voxels;
 }
 
@@ -401,10 +407,6 @@ export function mountVoxels(root, { angleId, flush }) {
       group.position.x = pose.shake * 0.01;
     },
   });
-
-  const rim = new THREE.DirectionalLight("#fff4e6", 0.42);
-  rim.position.set(-1.8, 3.4, 4.2);
-  scene.add(rim);
 
   group.position.y = 0.01;
   scene.add(group);
