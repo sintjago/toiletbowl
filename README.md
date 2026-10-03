@@ -32,9 +32,9 @@ Then open [http://localhost:8000](http://localhost:8000).
 
 ![Unpack the whole set](previews/viewer-lineup.png)
 
-The viewer opens on a wide shot of the whole table, then you can unpack the set.
+The viewer opens on a wide shot of the whole table, then you can unpack the set. Each sister has her own temper: Matryona the unhurried matriarch, Darya who skates like frost, Olga who turns to the lamp, Natasha who cannot sit still, and Masha the bouncing baby.
 
-- **Unpack set** — opens each lid and flies the inner doll out until all five stand in a row
+- **Unpack set** — opens each lid and flies the inner doll out until all five stand in a row and come alive
 - **Click** a closed doll to lift her lid; the next one peeks from the cup
 - **Click** the inner doll to take her out (she arcs onto the table)
 - **Nest all** packs them back, one into the next

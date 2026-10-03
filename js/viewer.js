@@ -8,6 +8,123 @@ const statusEl = document.getElementById("status");
 const rosterEl = document.getElementById("roster");
 const GOLD_IDX = new Set([12, 13, 14]);
 
+const PERSONAS = [
+  {
+    key: "matryona",
+    role: "matriarch",
+    line: "keeps every daughter under her scarf",
+    quotes: {
+      table: "keeping watch over the cloth",
+      open: "opening the house, unhurried",
+      inside: "holding them all, as she always has",
+      peek: "letting the next one see the lamp",
+    },
+    ring: 0xe4b23c,
+    aura: 0xc62828,
+    auraSize: 0.55,
+    motion: "regal",
+    glance: "daughters",
+    glanceEvery: [4.2, 7.0],
+    flightH: 11,
+    flightDur: 0.86,
+    flightSpin: 0,
+    lid: { h: 13, z: -2.1, pitch: -0.72, yaw: 0, twist: 0, speed: 4.4 },
+    notes: { open: 174, close: 96, lift: 196, land: 62, nest: 148, chime: 196, giggle: 220, type: "triangle", gain: 0.08 },
+  },
+  {
+    key: "darya",
+    role: "frost singer",
+    line: "skates the cloth like a frozen lake",
+    quotes: {
+      table: "gliding, cool as the night pane",
+      open: "a quiet crack of winter wood",
+      inside: "asleep in the blue dark",
+      peek: "frost on her scarf, listening",
+    },
+    ring: 0x82b1ff,
+    aura: 0xe8f4ff,
+    auraSize: 0.42,
+    motion: "glide",
+    glance: "window",
+    glanceEvery: [3.0, 5.2],
+    flightH: 9,
+    flightDur: 0.92,
+    flightSpin: 0.2,
+    lid: { h: 10, z: -4.4, pitch: -0.5, yaw: 0.2, twist: 0.12, speed: 6.2 },
+    notes: { open: 620, close: 340, lift: 710, land: 260, nest: 480, chime: 784, giggle: 880, type: "sine", gain: 0.055 },
+  },
+  {
+    key: "olga",
+    role: "sunflower",
+    line: "turns her face to the lamp as if it were July",
+    quotes: {
+      table: "beaming at the hanging sun",
+      open: "bright as a field in July",
+      inside: "dreaming of warm light",
+      peek: "already leaning toward the lamp",
+    },
+    ring: 0xf9a825,
+    aura: 0xffe082,
+    auraSize: 0.48,
+    motion: "sunny",
+    glance: "lamp",
+    glanceEvery: [1.8, 3.4],
+    flightH: 17,
+    flightDur: 0.56,
+    flightSpin: 0,
+    lid: { h: 12, z: -2.0, pitch: -1.12, yaw: 0, twist: 0, speed: 8.4 },
+    notes: { open: 392, close: 247, lift: 523, land: 196, nest: 330, chime: 523, giggle: 659, type: "triangle", gain: 0.07 },
+  },
+  {
+    key: "natasha",
+    role: "berry tease",
+    line: "cannot keep still — not even for a portrait",
+    quotes: {
+      table: "fidgeting, plotting the next hop",
+      open: "already halfway out of herself",
+      inside: "tapping the wood from inside",
+      peek: "peeks, then hides, then peeks",
+    },
+    ring: 0xec407a,
+    aura: 0xff8a80,
+    auraSize: 0.4,
+    motion: "fidget",
+    glance: "sisters",
+    glanceEvery: [0.7, 1.5],
+    flightH: 16,
+    flightDur: 0.48,
+    flightSpin: 1.35,
+    lid: { h: 9, z: -3.6, pitch: -1.28, yaw: 0.85, twist: 0.55, speed: 11.5 },
+    notes: { open: 740, close: 420, lift: 880, land: 300, nest: 560, chime: 880, giggle: 990, type: "square", gain: 0.035 },
+  },
+  {
+    key: "masha",
+    role: "baby",
+    line: "too small to open, too lively to sit",
+    quotes: {
+      table: "bouncing — the whole table is a drum",
+      open: "giggles instead of opening",
+      inside: "a raspberry seed in the dark",
+      peek: "waving from the cup",
+    },
+    ring: 0xf8bbd0,
+    aura: 0xff80ab,
+    auraSize: 0.36,
+    motion: "wobble",
+    glance: "camera",
+    glanceEvery: [1.0, 2.0],
+    flightH: 20,
+    flightDur: 0.44,
+    flightSpin: 2.1,
+    lid: { h: 6, z: 0, pitch: 0, yaw: 0, twist: 0, speed: 8 },
+    notes: { open: 880, close: 660, lift: 990, land: 440, nest: 770, chime: 1046, giggle: 1174, type: "sine", gain: 0.05 },
+  },
+];
+
+function personaOf(i) {
+  return PERSONAS[i] || PERSONAS[0];
+}
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
@@ -505,7 +622,8 @@ const sparks = new THREE.Points(
 );
 scene.add(sparks);
 const sparkLife = [];
-function burstSparks(origin) {
+function burstSparks(origin, color) {
+  if (color) sparks.material.color.set(color);
   sparkLife.length = 0;
   for (let i = 0; i < SPARK_N; i++) {
     sparkLife.push({
@@ -571,15 +689,34 @@ const audio = {
     o.start();
     o.stop(ctx.currentTime + dur + 0.02);
   },
-  open() { this.blip(220, 0.14, "triangle", 0.09); },
-  close() { this.blip(140, 0.11, "triangle", 0.08); },
-  lift() { this.blip(320, 0.18, "sine", 0.05); },
-  land() { this.blip(90, 0.16, "square", 0.045); },
-  nest() { this.blip(180, 0.2, "triangle", 0.07); },
-  chime(i) {
-    const notes = [392, 440, 494, 587, 659];
-    this.blip(notes[i % notes.length], 0.22, "sine", 0.04);
+  voice(i, kind) {
+    if (muted) return;
+    const n = personaOf(i).notes;
+    const freq = n[kind] || n.chime;
+    const dur = kind === "giggle" ? 0.09 : kind === "land" ? 0.14 : 0.16;
+    this.blip(freq, dur, n.type, n.gain);
+    if (kind === "giggle" || kind === "chime") {
+      const ctx = this.ensure();
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(freq * 1.5, t + 0.07);
+      g.gain.setValueAtTime(n.gain * 0.7, t + 0.07);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start(t + 0.07);
+      o.stop(t + 0.22);
+    }
   },
+  open(i) { this.voice(i ?? 0, "open"); },
+  close(i) { this.voice(i ?? 0, "close"); },
+  lift(i) { this.voice(i ?? 0, "lift"); },
+  land(i) { this.voice(i ?? 0, "land"); },
+  nest(i) { this.voice(i ?? 0, "nest"); },
+  chime(i) { this.voice(i ?? 0, "chime"); },
+  giggle(i) { this.voice(i ?? 4, "giggle"); },
 };
 
 function hexOf(palette, i) {
@@ -640,6 +777,61 @@ function easeOutBack(t) {
   return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
 }
 
+function makeAura(index) {
+  const n = 42;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(n * 3);
+  const ages = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    ages[i] = Math.random();
+    pos[i * 3 + 1] = -20;
+  }
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(
+    geo,
+    new THREE.PointsMaterial({
+      color: personaOf(index).aura,
+      size: personaOf(index).auraSize,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      sizeAttenuation: true,
+    })
+  );
+  pts.frustumCulled = false;
+  return { pts, n, ages, pos };
+}
+
+function yawToward(from, target) {
+  return Math.atan2(target.x - from.x, target.z - from.z);
+}
+
+function pickGlance(a) {
+  const p = personaOf(a.index);
+  if (p.glance === "window") return yawToward(a.pos, new THREE.Vector3(8, 0, -220));
+  if (p.glance === "lamp") return yawToward(a.pos, new THREE.Vector3(-8, 0, 14));
+  if (p.glance === "camera") return HOME_YAW + (Math.random() - 0.5) * 0.35;
+  if (p.glance === "sisters") {
+    const others = actors.filter((o) => o !== a && o.nestedIn == null && !o.enclosed());
+    if (others.length) {
+      const t = others[Math.floor(Math.random() * others.length)];
+      return yawToward(a.pos, t.pos);
+    }
+  }
+  if (p.glance === "daughters") {
+    const kids = actors.filter((o) => o.index > a.index && o.nestedIn == null);
+    if (kids.length) return yawToward(a.pos, kids[0].pos);
+  }
+  return HOME_YAW;
+}
+
+function wake(a) {
+  const p = personaOf(a.index);
+  a.flourish = { t: 0, dur: 0.72 + a.index * 0.04, kind: p.motion };
+  a.glanceT = 0.4;
+  audio.chime(a.index);
+}
+
 class DollActor {
   constructor(index, spec, palette, nestLocal) {
     this.index = index;
@@ -679,13 +871,17 @@ class DollActor {
     blob.position.y = 0.06;
     this.group.add(blob);
 
+    const persona = personaOf(index);
     this.ring = new THREE.Mesh(
       new THREE.RingGeometry(Math.max(this.w, this.d) * 0.44, Math.max(this.w, this.d) * 0.54, 28),
-      new THREE.MeshBasicMaterial({ color: 0xe4b23c, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: persona.ring, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false })
     );
     this.ring.rotation.x = -Math.PI / 2;
     this.ring.position.y = 0.13;
     this.group.add(this.ring);
+
+    this.aura = makeAura(index);
+    this.group.add(this.aura.pts);
 
     this.open = false;
     this.lidT = 0;
@@ -695,8 +891,14 @@ class DollActor {
     this.goal = new THREE.Vector3();
     this.yaw = HOME_YAW;
     this.goalYaw = HOME_YAW;
+    this.pitch = 0;
+    this.roll = 0;
     this.flight = null;
     this.bounce = 0;
+    this.alive = index === 0 ? 0.55 : 0;
+    this.glanceT = 1.5 + index * 0.4;
+    this.flourish = null;
+    this.hopPhase = Math.random() * Math.PI * 2;
     scene.add(this.group);
   }
 
@@ -733,12 +935,12 @@ function lineupX(index) {
 function setStatus() {
   const a = actors[selected];
   const child = actors[selected + 1];
-  let line = `${a.spec.nameRu} · ${a.spec.name}`;
-  if (a.nestedIn != null) line += " — inside " + actors[a.nestedIn].spec.name;
-  else if (a.open && child && child.nestedIn === a.index) line += " — open, " + child.spec.name + " is inside";
-  else if (a.open) line += " — open";
-  else line += " — on the table";
-  statusEl.textContent = line;
+  const p = personaOf(a.index);
+  let flavor = p.quotes.table;
+  if (a.nestedIn != null) flavor = p.quotes.inside;
+  else if (a.open && child && child.nestedIn === a.index) flavor = p.quotes.peek;
+  else if (a.open) flavor = p.quotes.open;
+  statusEl.textContent = `${a.spec.nameRu} · ${p.role} — ${flavor}`;
   [...rosterEl.querySelectorAll("button")].forEach((b, i) => {
     b.classList.toggle("active", i === selected);
   });
@@ -767,13 +969,15 @@ function frameVisible() {
   autoCam = true;
 }
 
-function flyTo(a, to, height = 16, dur = 0.55) {
+function flyTo(a, to, height, dur) {
+  const p = personaOf(a.index);
   a.flight = {
     t: 0,
-    dur,
+    dur: dur ?? p.flightDur,
     from: a.pos.clone(),
     to: to.clone(),
-    height,
+    height: height ?? p.flightH,
+    spin: p.flightSpin,
   };
   a.goal.copy(to);
 }
@@ -782,6 +986,9 @@ function openDoll(i) {
   const a = actors[i];
   if (!a.hollow) {
     selected = i;
+    a.bounce = 1.35;
+    a.flourish = { t: 0, dur: 0.7, kind: "wobble" };
+    audio.giggle(i);
     setStatus();
     return;
   }
@@ -790,18 +997,18 @@ function openDoll(i) {
     if (!p.open) openDoll(a.nestedIn);
     if (!p.open) return;
   }
-  if (!a.open) audio.open();
+  if (!a.open) audio.open(i);
   a.open = true;
   a.lidGoal = 1;
   selected = i;
   const p = a.worldPos();
-  burstSparks(new THREE.Vector3(p.x, a.splitY + 4, p.z));
+  burstSparks(new THREE.Vector3(p.x, a.splitY + 4, p.z), personaOf(i).aura);
   setStatus();
 }
 
 function closeDoll(i) {
   const a = actors[i];
-  if (a.open) audio.close();
+  if (a.open) audio.close(i);
   a.open = false;
   a.lidGoal = 0;
   selected = i;
@@ -823,8 +1030,9 @@ function takeOut(i) {
       slotX = Math.max(slotX, other.goal.x + other.w * 0.5 + child.w * 0.5 + 7);
     }
   });
-  audio.lift();
-  flyTo(child, new THREE.Vector3(slotX, 0, 6), 14 + child.h * 0.12, 0.62);
+  audio.lift(i);
+  flyTo(child, new THREE.Vector3(slotX, 0, 6));
+  wake(child);
   selected = i;
   setStatus();
 }
@@ -837,7 +1045,7 @@ function nestIntoParent(childIndex) {
   if (!parent.open) openDoll(parent.index);
   const occupant = actors.find((a) => a.nestedIn === parent.index);
   if (occupant && occupant.index !== child.index) takeOut(occupant.index);
-  audio.nest();
+  audio.nest(childIndex);
   child.open = false;
   child.lidGoal = 0;
   child.nestedIn = parent.index;
@@ -866,8 +1074,9 @@ function lineUp() {
     a.open = false;
     a.lidGoal = 0;
     a.flight = null;
-    flyTo(a, new THREE.Vector3(lineupX(i), 0, 0), 8, 0.7);
+    flyTo(a, new THREE.Vector3(lineupX(i), 0, 0));
     a.goalYaw = HOME_YAW;
+    a.flourish = { t: -0.2 - i * 0.16, dur: 0.78, kind: personaOf(i).motion };
   });
   selected = 0;
   setStatus();
@@ -925,8 +1134,8 @@ async function unpackAll() {
     setStatus();
     await wait(680);
     takeOut(i + 1);
-    flyTo(actors[i + 1], new THREE.Vector3(lineupX(i + 1), 0, 2), 15, 0.7);
-    flyTo(actors[i], new THREE.Vector3(lineupX(i), 0, 0), 6, 0.7);
+    flyTo(actors[i + 1], new THREE.Vector3(lineupX(i + 1), 0, 2));
+    flyTo(actors[i], new THREE.Vector3(lineupX(i), 0, 0));
     frameVisible();
     await wait(780);
     closeDoll(i);
@@ -959,7 +1168,7 @@ async function packAll() {
     child.nestedIn = parent.index;
     child.open = false;
     child.lidGoal = 0;
-    audio.nest();
+    audio.nest(i);
     closeDoll(parent.index);
     await wait(360);
   }
@@ -978,8 +1187,9 @@ function buildRoster() {
   rosterEl.innerHTML = "";
   actors.forEach((a, i) => {
     const b = document.createElement("button");
-    b.className = "doll-btn";
-    b.innerHTML = `<span class="ru">${a.spec.nameRu}</span>${a.spec.name}`;
+    const p = personaOf(i);
+    b.className = `doll-btn persona-${p.key}`;
+    b.innerHTML = `<span class="ru">${a.spec.nameRu}</span>${a.spec.name}<span class="role">${p.role}</span>`;
     b.addEventListener("click", () => {
       if (busy) return;
       audio.ensure();
@@ -988,7 +1198,8 @@ function buildRoster() {
         const p = actors[a.nestedIn];
         if (!p.open) openDoll(p.index);
         else takeOut(i);
-      } else if (a.hollow && !a.open) openDoll(i);
+      } else if (!a.hollow) openDoll(i);
+      else if (a.hollow && !a.open) openDoll(i);
       else if (a.open) closeDoll(i);
       setStatus();
     });
@@ -1103,22 +1314,71 @@ document.getElementById("btn-line").addEventListener("click", () => { if (!busy)
 document.getElementById("btn-nest").addEventListener("click", () => { if (!busy) packAll(); });
 document.getElementById("btn-mute")?.addEventListener("click", toggleMute);
 
+function updateAura(a, dt) {
+  const live = a.alive;
+  const motion = personaOf(a.index).motion;
+  a.aura.pts.material.opacity = live * (a.enclosed() ? 0 : 0.62);
+  const pos = a.aura.pos;
+  const ages = a.aura.ages;
+  const n = a.aura.n;
+  const r0 = Math.max(a.w, a.d) * 0.42;
+  for (let i = 0; i < n; i++) {
+    ages[i] += dt * (0.35 + (i % 5) * 0.08);
+    if (ages[i] > 1) ages[i] -= 1;
+    const u = ages[i];
+    const ang = (i / n) * Math.PI * 2 + clock.elapsedTime * 0.4;
+    if (motion === "regal") {
+      pos[i * 3] = Math.cos(ang) * (r0 + 2 + u * 4);
+      pos[i * 3 + 2] = Math.sin(ang) * (r0 + 2 + u * 4);
+      pos[i * 3 + 1] = a.h * (1.05 - u * 1.15);
+    } else if (motion === "glide") {
+      pos[i * 3] = Math.cos(ang + u * 2) * (r0 + u * 6);
+      pos[i * 3 + 2] = Math.sin(ang + u * 2) * (r0 + u * 6);
+      pos[i * 3 + 1] = a.h * 0.95 - u * (a.h + 6);
+    } else if (motion === "sunny") {
+      pos[i * 3] = Math.cos(ang) * (3 + u * 8);
+      pos[i * 3 + 2] = Math.sin(ang) * (3 + u * 8);
+      pos[i * 3 + 1] = a.h * 0.35 + u * (a.h * 0.7);
+    } else if (motion === "fidget") {
+      pos[i * 3] = Math.cos(ang * 1.6 + u * 8) * (r0 + 1);
+      pos[i * 3 + 2] = Math.sin(ang * 1.6 + u * 8) * (r0 + 1);
+      pos[i * 3 + 1] = a.h * (0.25 + 0.2 * Math.sin(u * 12 + i));
+    } else {
+      pos[i * 3] = Math.cos(ang) * (1.5 + u * 5);
+      pos[i * 3 + 2] = Math.sin(ang) * (1.5 + u * 5);
+      pos[i * 3 + 1] = 1 + u * (a.h + 4);
+    }
+  }
+  a.aura.pts.geometry.attributes.position.needsUpdate = true;
+}
+
 function updateActors(dt) {
   const t = clock.elapsedTime;
   const k = 1 - Math.exp(-dt * 10);
-  const kLid = 1 - Math.exp(-dt * 7.5);
   actors.forEach((a) => {
+    const p = personaOf(a.index);
+    const enclosed = a.enclosed();
+    let want = 0;
+    if (!enclosed && a.nestedIn == null) want = 1;
+    else if (!enclosed && a.nestedIn != null) want = 0.28;
+    else if (a.index === 0) want = 0.5;
+    a.alive += (want - a.alive) * (1 - Math.exp(-dt * 2.4));
+    const live = a.alive;
+    const kLid = 1 - Math.exp(-dt * p.lid.speed);
+
     if (a.flight) {
       a.flight.t += dt / a.flight.dur;
       const u = Math.min(1, a.flight.t);
       const e = 1 - (1 - u) ** 3;
       a.pos.lerpVectors(a.flight.from, a.flight.to, e);
       a.pos.y = a.flight.from.y * (1 - e) + a.flight.to.y * e + Math.sin(u * Math.PI) * a.flight.height;
+      a.yaw += (a.flight.spin || 0) * dt * (Math.PI * 2 / Math.max(0.2, a.flight.dur));
       if (u >= 1) {
         a.flight = null;
         a.pos.copy(a.goal);
-        a.bounce = 1;
-        audio.land();
+        a.bounce = a.index === 4 ? 1.45 : 1;
+        audio.land(a.index);
+        if (a.index === 4) audio.giggle(4);
       }
     } else if (a.nestedIn != null) {
       const wp = a.worldPos();
@@ -1127,21 +1387,77 @@ function updateActors(dt) {
     } else {
       a.pos.lerp(a.goal, k);
     }
+
+    if (!a.flight && a.nestedIn == null && dragging !== a) {
+      a.glanceT -= dt;
+      if (a.glanceT <= 0) {
+        const span = p.glanceEvery;
+        a.glanceT = span[0] + Math.random() * (span[1] - span[0]);
+        a.goalYaw = pickGlance(a);
+      }
+    }
+
     a.lidT += (a.lidGoal - a.lidT) * kLid;
-    a.yaw += (a.goalYaw - a.yaw) * k;
-    if (a.bounce > 0) a.bounce = Math.max(0, a.bounce - dt * 3.2);
-    const squash = 1 - a.bounce * 0.06;
+    a.yaw += (a.goalYaw - a.yaw) * (1 - Math.exp(-dt * (p.motion === "fidget" ? 8 : 3.4)));
+    if (a.bounce > 0) a.bounce = Math.max(0, a.bounce - dt * (a.index === 4 ? 2.4 : 3.2));
+
+    let ox = 0, oy = a.bounce * 0.8, oz = 0;
+    let pitch = 0, roll = 0;
+    let extraYaw = 0;
+    const idle = live * (dragging === a ? 0.15 : 1);
+    if (p.motion === "regal") {
+      extraYaw = Math.sin(t * 0.32 + a.index) * 0.05 * idle;
+      pitch = Math.sin(t * 0.45) * 0.03 * idle;
+      oy += Math.sin(t * 0.5) * 0.1 * idle;
+      if (a.flourish && a.flourish.t > 0) pitch += Math.sin(Math.min(1, a.flourish.t / a.flourish.dur) * Math.PI) * 0.28;
+    } else if (p.motion === "glide") {
+      const g = t * 0.7 + a.index;
+      ox = Math.sin(g) * 2.1 * idle;
+      oz = Math.cos(g * 0.85) * 1.3 * idle;
+      extraYaw = Math.sin(g) * 0.2 * idle;
+      roll = -Math.sin(g) * 0.1 * idle;
+    } else if (p.motion === "sunny") {
+      oy += Math.abs(Math.sin(t * 2.15 + a.hopPhase)) * 0.55 * idle;
+      const lampYaw = yawToward(a.pos, new THREE.Vector3(-8, 0, 14));
+      extraYaw += (lampYaw - a.yaw) * 0.15 * idle;
+      pitch = -0.06 * idle;
+    } else if (p.motion === "fidget") {
+      extraYaw = Math.sin(t * 3.3 + a.hopPhase) * 0.22 * idle;
+      ox = Math.sin(t * 2.6) * 0.7 * idle;
+      oz = Math.cos(t * 3.1) * 0.5 * idle;
+      if (Math.sin(t * 2.9 + a.hopPhase) > 0.92) a.bounce = Math.max(a.bounce, 0.55 * idle);
+      if (a.flourish && a.flourish.t > 0) extraYaw += a.flourish.t / a.flourish.dur * Math.PI * 2;
+    } else {
+      oy += Math.abs(Math.sin(t * 4.6 + a.hopPhase)) * 0.85 * idle;
+      roll = Math.sin(t * 5.1) * 0.14 * idle;
+      extraYaw = Math.sin(t * 2.2) * 0.18 * idle + t * 0.15 * idle;
+      if (a.flourish && a.flourish.t > 0) extraYaw += (a.flourish.t / a.flourish.dur) * Math.PI * 2.4;
+    }
+
+    if (a.flourish) {
+      a.flourish.t += dt;
+      if (a.flourish.t > a.flourish.dur) a.flourish = null;
+    }
+
+    const squash = 1 - a.bounce * (a.index === 4 ? 0.11 : 0.06);
     a.group.position.copy(a.pos);
-    a.group.position.y += a.bounce * 0.8;
+    a.group.position.x += ox;
+    a.group.position.y += oy;
+    a.group.position.z += oz;
     a.group.scale.set(1 / squash, squash, 1 / squash);
-    a.group.rotation.y = a.yaw + (a.nestedIn == null && !a.open ? Math.sin(t * 0.55 + a.index) * 0.04 : 0);
-    a.group.visible = !a.enclosed();
+    a.group.rotation.set(pitch, a.yaw + extraYaw, roll);
+    a.group.visible = !enclosed;
+
     const lift = a.lidGoal > a.lidT ? easeOutBack(Math.min(1, a.lidT)) : a.lidT;
-    a.lidPivot.position.y = (a.splitY || a.h * 0.5) + lift * (11 + a.h * 0.17);
-    a.lidPivot.position.z = lift * -2.8;
-    a.lidPivot.rotation.x = lift * -0.98;
-    const on = a.index === selected ? 0.9 : 0;
+    a.lidPivot.position.y = (a.splitY || a.h * 0.5) + lift * p.lid.h;
+    a.lidPivot.position.z = lift * p.lid.z;
+    a.lidPivot.rotation.x = lift * p.lid.pitch;
+    a.lidPivot.rotation.y = lift * p.lid.yaw;
+    a.lidPivot.rotation.z = lift * p.lid.twist;
+
+    const on = a.index === selected ? 0.92 : live > 0.7 ? 0.18 : 0;
     a.ring.material.opacity += (on - a.ring.material.opacity) * (1 - Math.exp(-dt * 10));
+    updateAura(a, dt);
   });
   const dp = dust.geometry.attributes.position.array;
   for (let i = 0; i < dustN; i++) {
@@ -1210,6 +1526,7 @@ async function main() {
   }
   buildRoster();
   setStatus();
+  actors[0].flourish = { t: -0.6, dur: 1.0, kind: "regal" };
   loading.hidden = true;
   tick();
 }

@@ -187,10 +187,13 @@ button#btn-unpack {
 }
 
 .roster button.doll-btn {
-  min-width: 170px;
+  min-width: 186px;
   text-align: right;
   background: rgba(26, 11, 12, 0.7);
   box-shadow: none;
+  line-height: 1.2;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .roster button.doll-btn.active {
@@ -202,6 +205,22 @@ button#btn-unpack {
   font-size: 1.15em;
   margin-right: 8px;
 }
+
+.roster .role {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72em;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  font-weight: 400;
+  opacity: 0.72;
+}
+
+.roster button.persona-matryona { border-color: #e4b23c; }
+.roster button.persona-darya { border-color: #82b1ff; }
+.roster button.persona-olga { border-color: #f9a825; }
+.roster button.persona-natasha { border-color: #ec407a; }
+.roster button.persona-masha { border-color: #f8bbd0; }
 
 .vignette {
   pointer-events: none;
