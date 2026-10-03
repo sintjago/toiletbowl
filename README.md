@@ -4,7 +4,9 @@ A five-piece Russian matryoshka set built as true voxels. Each doll (except the 
 
 ![Front of the set](previews/set-front.png)
 
-## The set
+## The sets
+
+Two families, each five dolls, one inside the other. Switch them in the viewer.
 
 | Doll | Russian | Colors | Size (xyz) |
 | --- | --- | --- | --- |
@@ -14,7 +16,15 @@ A five-piece Russian matryoshka set built as true voxels. Each doll (except the 
 | Natasha | Наташа | saffron and berries | 13 × 21 × 13 |
 | Masha | Маша | raspberry, solid baby | 9 × 15 × 9 |
 
-Painting follows Semenov / Khokhloma folk colors: red, gold, black, cream, roses and leaves, a scarf window around a round face.
+| Doll | Russian | Colors | Size (xyz) |
+| --- | --- | --- | --- |
+| Ivan | Иван | red kosovorotka, beard, gold sash | 37 × 55 × 37 |
+| Pavel | Павел | sea-blue shirt | 27 × 41 × 27 |
+| Boris | Борис | green, wheat | 19 × 29 × 19 |
+| Yuri | Юрий | amber youth | 13 × 21 × 13 |
+| Kolya | Коля | little boy, solid | 9 × 15 × 9 |
+
+Painting follows Semenov / Khokhloma folk colors: red, gold, black, cream, roses and leaves. The sisters wear a scarf window around a round face; the husbands wear a hat, shirt, and sash.
 
 ## Open them in the browser
 
@@ -32,7 +42,9 @@ Then open [http://localhost:8000](http://localhost:8000).
 
 ![Unpack the whole set](previews/viewer-lineup.png)
 
-The viewer opens on a wide shot of the whole table, then you can unpack the set. Each sister has her own temper: Matryona the unhurried matriarch, Darya who skates like frost, Olga who turns to the lamp, Natasha who cannot sit still, and Masha the bouncing baby.
+The viewer opens on a wide shot of the whole table. The app is bilingual — **RU / EN** in the corner. Pick the **sisters** or the **husbands** (Иван and his sons, nested the same way), and move the table between four rooms: the lamp-lit **izba**, a snowy **winter** yard, a summer **meadow**, and a gilded **terem**.
+
+Each sister has her own temper: Matryona the unhurried matriarch, Darya who skates like frost, Olga who turns to the lamp, Natasha who cannot sit still, and Masha the bouncing baby. Ivan’s line is proud, seafaring, bearish, restless, and tiny.
 
 - **Unpack set** — opens each lid and flies the inner doll out until all five stand in a row and come alive
 - **Click** a closed doll to lift her lid; the next one peeks from the cup
@@ -45,9 +57,10 @@ The viewer opens on a wide shot of the whole table, then you can unpack the set.
 
 `models/` holds MagicaVoxel `.vox` files:
 
-- `matryona.vox`, `darya.vox`, `olga.vox`, `natasha.vox`, `masha.vox` — each doll
-- `matryoshka-nested.vox` — the full set stacked inside one another
-- `matryoshka-lineup.vox` — all five standing in a row
+- `matryona.vox`, `darya.vox`, `olga.vox`, `natasha.vox`, `masha.vox` — the sisters
+- `ivan.vox`, `pavel.vox`, `boris.vox`, `yuri.vox`, `kolya.vox` — the husbands
+- `matryoshka-nested.vox` / `husbands-nested.vox` — each family stacked inside one another
+- `matryoshka-lineup.vox` / `husbands-lineup.vox` — each family standing in a row
 
 In MagicaVoxel you can hide layers or split at the waist (`splitY` is also stored in `models/dolls.json`) to lift lids by hand.
 
@@ -57,4 +70,4 @@ In MagicaVoxel you can hide layers or split at the waist (`splitY` is also store
 python3 tools/generate.py
 ```
 
-Writes `.vox` files, `models/dolls.json` for the viewer, and PNG previews under `previews/`.
+Writes `.vox` files, `models/dolls.json` and `models/husbands.json` for the viewer, and PNG previews under `previews/`.

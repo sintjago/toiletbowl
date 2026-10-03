@@ -68,7 +68,63 @@ html, body {
 }
 
 .brand {
-  max-width: 420px;
+  max-width: 460px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.lang-switch {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.lang-switch button {
+  min-width: 46px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  box-shadow: 0 3px 0 #3a0c10;
+}
+
+.lang-switch button.active {
+  background: linear-gradient(#d4a017, #9b242c);
+}
+
+.choosers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.chooser {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.chooser-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(244, 230, 200, 0.62);
+  margin-right: 4px;
+}
+
+.chooser button {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  box-shadow: 0 3px 0 #3a0c10;
+}
+
+.chooser button.active {
+  background: linear-gradient(#d4a017, #9b242c);
 }
 
 .brand h1 {
@@ -221,6 +277,11 @@ button#btn-unpack {
 .roster button.persona-olga { border-color: #f9a825; }
 .roster button.persona-natasha { border-color: #ec407a; }
 .roster button.persona-masha { border-color: #f8bbd0; }
+.roster button.persona-ivan { border-color: #e4b23c; }
+.roster button.persona-pavel { border-color: #82b1ff; }
+.roster button.persona-boris { border-color: #8bc34a; }
+.roster button.persona-yuri { border-color: #ffb74d; }
+.roster button.persona-kolya { border-color: #90caf9; }
 
 .vignette {
   pointer-events: none;

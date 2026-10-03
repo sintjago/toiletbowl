@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,21 +22,31 @@
   <div class="loading" id="loading">Painting the dolls…</div>
   <div class="hud">
     <div class="brand">
-      <h1>Матрёшка<span>Voxel nesting dolls</span></h1>
-      <p>Five sisters, one inside the other — each with her own temper. Unpack them and they come alive under the lamp.</p>
+      <div class="brand-row">
+        <h1 id="ui-title">Матрёшка<span id="ui-subtitle">Воксельные матрёшки</span></h1>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" id="btn-lang-ru" class="active">RU</button>
+          <button type="button" id="btn-lang-en">EN</button>
+        </div>
+      </div>
+      <p id="ui-blurb">Пять сестёр, одна в другой — у каждой свой характер. Разберите их, и они оживут.</p>
+      <div class="choosers">
+        <div class="chooser" id="set-picker"></div>
+        <div class="chooser" id="room-picker"></div>
+      </div>
     </div>
     <div class="controls">
-      <button id="btn-unpack">Unpack set</button>
-      <button id="btn-open">Open lid</button>
-      <button id="btn-take">Take out</button>
-      <button id="btn-line">Line up</button>
-      <button id="btn-nest" class="ghost">Nest all</button>
-      <button id="btn-mute" class="ghost">Sound on</button>
+      <button id="btn-unpack">Разобрать</button>
+      <button id="btn-open">Открыть</button>
+      <button id="btn-take">Достать</button>
+      <button id="btn-line">В ряд</button>
+      <button id="btn-nest" class="ghost">Собрать</button>
+      <button id="btn-mute" class="ghost">Звук вкл</button>
       <span class="status" id="status"></span>
     </div>
   </div>
   <div class="roster" id="roster"></div>
-  <p class="hint">Unpack them and they wake — Matryona nods, Darya skates, Olga finds the lamp, Natasha fidgets, Masha bounces. Click a lid, or tap the baby to make her giggle.</p>
+  <p class="hint" id="ui-hint">Разберите набор — Матрёна кивает, Дарья скользит, Ольга ищет лампу, Наташа ёрзает, Маша прыгает.</p>
   <script type="importmap">
   {
     "imports": {
@@ -45,6 +55,6 @@
     }
   }
   </script>
-  <script type="module" src="js/viewer.js?v=10"></script>
+  <script type="module" src="js/viewer.js?v=12"></script>
 </body>
 </html>
