@@ -152,25 +152,22 @@ export function createToilet({
       : new THREE.MeshStandardMaterial(chrome);
   const wellMat =
     material === "wire"
-      ? new THREE.MeshBasicMaterial({ color: "#d7eeef", wireframe: true, side: THREE.DoubleSide })
-      : new THREE.MeshPhysicalMaterial({
-          color: "#eef8f7",
-          roughness: 0.08,
-          metalness: 0.03,
-          clearcoat: 0.9,
-          clearcoatRoughness: 0.1,
+      ? new THREE.MeshBasicMaterial({ color: "#3d7c82", wireframe: true, side: THREE.DoubleSide })
+      : new THREE.MeshStandardMaterial({
+          color: "#3f7f86",
+          roughness: 0.35,
+          metalness: 0.04,
+          envMapIntensity: 0.15,
           side: THREE.DoubleSide,
         });
   const waterMat =
     material === "wire"
       ? new THREE.MeshBasicMaterial({ color: "#1f9bb3", wireframe: true })
-      : new THREE.MeshPhysicalMaterial({
+      : new THREE.MeshBasicMaterial({
           map: waterTexture(),
-          color: "#3ec4d6",
-          roughness: 0.04,
-          metalness: 0.12,
+          color: "#2ec4d8",
           transparent: true,
-          opacity: 0.92,
+          opacity: 0.96,
           side: THREE.DoubleSide,
         });
   const darkMat =
@@ -207,10 +204,10 @@ export function createToilet({
   drain.position.set(0.02, 0.485, bowlZ + 0.04);
   group.add(drain);
 
-  const water = new THREE.Mesh(new THREE.CircleGeometry(0.4, 48), waterMat);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(0.46, 48), waterMat);
   water.rotation.x = -Math.PI / 2;
-  water.position.set(0, 0.76, bowlZ + 0.03);
-  water.scale.set(1, OVAL_Z * 0.9, 1);
+  water.position.set(0, 0.82, bowlZ + 0.02);
+  water.scale.set(1, OVAL_Z * 0.92, 1);
   water.visible = false;
   group.add(water);
 
