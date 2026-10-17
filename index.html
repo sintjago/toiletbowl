@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Матрёшка — voxel nesting dolls</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="frame">
+    <span class="corner tl"></span>
+    <span class="corner tr"></span>
+    <span class="corner bl"></span>
+    <span class="corner br"></span>
+  </div>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+  <div class="loading" id="loading">Painting the dolls…</div>
+  <div class="hud">
+    <div class="brand">
+      <div class="brand-row">
+        <h1 id="ui-title">Матрёшка<span id="ui-subtitle">Воксельные матрёшки</span></h1>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" id="btn-lang-ru" class="active">RU</button>
+          <button type="button" id="btn-lang-en">EN</button>
+        </div>
+      </div>
+      <p id="ui-blurb">Пять сестёр, одна в другой — у каждой свой характер. Разберите их, и они оживут.</p>
+      <div class="choosers">
+        <div class="chooser" id="set-picker"></div>
+        <div class="chooser" id="room-picker"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="btn-unpack">Разобрать</button>
+      <button id="btn-open">Открыть</button>
+      <button id="btn-take">Достать</button>
+      <button id="btn-line">В ряд</button>
+      <button id="btn-nest" class="ghost">Собрать</button>
+      <button id="btn-home">Домой</button>
+      <button id="btn-mute" class="ghost">Звук вкл</button>
+      <span class="status" id="status"></span>
+    </div>
+  </div>
+  <div class="roster" id="roster"></div>
+  <p class="hint" id="ui-hint">Разберите набор — Матрёна кивает, Дарья скользит, Ольга ищет лампу, Наташа ёрзает, Маша прыгает.</p>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/viewer.js?v=14"></script>
+</body>
+</html>
